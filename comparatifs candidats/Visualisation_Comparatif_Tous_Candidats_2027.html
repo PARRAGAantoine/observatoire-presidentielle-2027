@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grand Atlas Graphique & Comparateur des 32 Candidats 2027</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-body: #0a0e17;
+            --bg-card: #131b2e;
+            --bg-card-hover: #1b2640;
+            --border-color: #233152;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-rose: #f43f5e;
+            --accent-amber: #f59e0b;
+            --accent-purple: #a855f7;
+            --accent-cyan: #06b6d4;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            padding: 24px;
+            line-height: 1.5;
+        }
+        .header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #4c1d95 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .header h1 { font-size: 26px; font-weight: 800; color: #fff; margin-bottom: 8px; }
+        .header p { font-size: 14px; color: #cbd5e1; max-width: 950px; }
+        
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .tab-btn {
+            background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border-color);
+            padding: 9px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;
+            white-space: nowrap; transition: all 0.2s ease;
+        }
+        .tab-btn:hover { background: rgba(59, 130, 246, 0.2); color: #fff; }
+        .tab-btn.active {
+            background: var(--accent-blue); color: #fff; border-color: var(--accent-blue);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+        
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+        
+        .chart-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .chart-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
+        }
+        .chart-header h3 {
+            font-size: 16px; font-weight: 700; color: #e2e8f0;
+            border-left: 4px solid var(--accent-blue); padding-left: 10px;
+        }
+        .chart-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 18px; }
+        .chart-holder-large { position: relative; height: 500px; width: 100%; }
+        .chart-holder-square { position: relative; height: 480px; width: 100%; }
+        
+        .grid-2 {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;
+        }
+        @media (max-width: 1024px) {
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+        
+        .footer { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 36px; padding: 20px 0; border-top: 1px solid var(--border-color); }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>📊 Grand Atlas Graphique des 32 Candidats : Tous les Comparatifs Thématiques</h1>
+        <p>Explorez l'intégralité des graphiques comparant l'ensemble des 32 candidats à l'élection présidentielle 2027 sur chaque dimension : Retraites, Salaires & SMIC, Fiscalité des Ménages & Entreprises, Énergie & Nucléaire, Immigration, Régalien, Fonction Publique et la Grande Boussole Électorale 2D.</p>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+        <button class="tab-btn active" onclick="showTab('tab-retraites')">👴 1. Retraites & Âge Légal</button>
+        <button class="tab-btn" onclick="showTab('tab-salaires')">💶 2. Salaires & SMIC Net</button>
+        <button class="tab-btn" onclick="showTab('tab-fiscalite')">🏠 3. Fiscalité Ménages (IR)</button>
+        <button class="tab-btn" onclick="showTab('tab-entreprises')">🏭 4. Fiscalité Entreprises</button>
+        <button class="tab-btn" onclick="showTab('tab-energie')">⚡ 5. Énergie & EPR</button>
+        <button class="tab-btn" onclick="showTab('tab-immi')">🛂 6. Immigration & Frontières</button>
+        <button class="tab-btn" onclick="showTab('tab-regalien')">👮 7. Régalien & Prisons</button>
+        <button class="tab-btn" onclick="showTab('tab-etat')">🏛️ 8. Fonctionnaires & État</button>
+        <button class="tab-btn" onclick="showTab('tab-boussole')">🧭 9. Grande Boussole 2D</button>
+        <button class="tab-btn" onclick="showTab('tab-macro')">🌐 10. Budget Macro Consolidé</button>
+    </div>
+
+    <!-- TAB 1: Retraites -->
+    <div id="tab-retraites" class="tab-pane active">
+        <div class="chart-box">
+            <div class="chart-header">
+                <h3>Graphique Comparatif 1 : Âge Légal de Départ à la Retraite (de 55 à 67 ans)</h3>
+            </div>
+            <div class="chart-desc">Comparaison de l'âge légal de départ proposé par chaque candidat. La ligne repère rouge indique la loi actuelle (64 ans).</div>
+            <div class="chart-holder-large"><canvas id="chartRetraites"></canvas></div>
+        </div>
+    </div>
+
+    <!-- TAB 2: Salaires -->
+    <div id="tab-salaires" class="tab-pane">
+        <div class="chart-box">
+            <div class="chart-header">
+                <h3>Graphique Comparatif 2 : Niveau du SMIC Net Mensuel Proposé (€/mois)</h3>
+            </div>
+            <div class="chart-desc">Objectif de SMIC net dès l'An 1 (de 1 426 € actuel jusqu'à 2 000 €).</div>
+            <div class="chart-holder-large"><canvas id="chartSalaires"></canvas></div>
+        </div>
+    </div>
+
+    <!-- TAB 3: Fiscalité Ménages -->
+    <div id="tab-fiscalite" class="tab-pane">
+        <div class="chart-box">
+            <div class="chart-header">
+                <h3>Graphique Comparatif 3 : Taux Marginal Supérieur de l'Impôt sur le Revenu (%)</h3>
+            </div>
+            <div class="chart-desc">Taux d'imposition sur la tranche la plus haute de l'IR (de 40% chez Lisnard jusqu'à 90% chez Mélenchon, Arthaud, Poutou). La référence actuelle est à 45%.</div>
+            <div class="chart-holder-large"><canvas id="chartFiscalite"></canvas></div>
+        </div>
+    </div>
+
+    <!-- TAB 4: Fiscalité Entreprises -->
+    <div id="tab-entreprises" class="tab-pane">
+        <div class="chart-box">
+            <div class="chart-header">
+                <h3>Graphique Comparatif 4 : Choc Fiscal sur les Entreprises (+ Allègement / - Surtaxe en Mds €)</h3>
+            </div>
+            <div class="chart-desc">Gains nets pour la compétitivité (suppression C3S/CVAE, baisse charges) vs surtaxes sur les superprofits et dividendes.</div>
+            <div class="chart-holder-large"><canvas id="chartEntreprises"></canvas></div>
+        </div>
+    </div>
+
+    <!-- TAB 5: Énergie -->
+    <div id="tab-energie" class="tab-pane">
+        <div class="chart-box">
+            <div class="chart-header">
+                <h3>Graphique Comparatif 5 : Nombre de Nouveaux Réacteurs Nucléaires EPR Prévus</h3>
+            </div>
+            <div class="chart-desc">Programme de relance nucléaire civil : de 0 EPR (sortie programmée du nucléaire) jusqu'à 14 réacteurs EPR 2.</div>
+            <div class="chart-holder-large"><canvas id="chartEnergie"></canvas></div>
+        </div>
+    </div>
+
+    <!-- TAB 6: Immigration -->
+    <div id="tab-immi" class="tab-pane">
+        <div class="chart-box">
+            <div class="chart-header">
+                <h3>Graphique Comparatif 6 : Indice de Fermeté et Contrôle des Frontières (Score de 1 à 10)</h3>
+            </div>
+            <div class="chart-desc">Échelle synthétique : 1 = Ouverture totale et régularisation globale / 10 = Immigration zéro, priorité nationale et suppression AME.</div>
+            <div class="chart-holder-large"><canvas id="chartImmigration"></canvas></div>
+        </div>
+    </div>
+
+    <!-- TAB 7: Régalien -->
+    <div id="tab-regalien" class="tab-pane">
+        <div class="grid-2">
+            <div class="chart-box">
+                <div class="chart-header">
+                    <h3>Graphique Comparatif 7A : Création de Places de Prison</h3>
+                </div>
+                <div class="chart-desc">Objectif de nouvelles places nettes sous le quinquennat (0 à 20 000 places).</div>
+                <div class="chart-holder-square"><canvas id="chartPrisons"></canvas></div>
+            </div>
+            <div class="chart-box">
+                <div class="chart-header">
+                    <h3>Graphique Comparatif 7B : Budget Défense LPM (% du PIB)</h3>
+                </div>
+                <div class="chart-desc">Effort militaire national : de 1,0% à 2,5% du PIB.</div>
+                <div class="chart-holder-square"><canvas id="chartLPM"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 8: Fonction Publique -->
+    <div id="tab-etat" class="tab-pane">
+        <div class="chart-box">
+            <div class="chart-header">
+                <h3>Graphique Comparatif 8 : Objectif de Non-Remplacement de Fonctionnaires (Milliers)</h3>
+            </div>
+            <div class="chart-desc">Coupes dans les effectifs administratifs de l'État : de 0 à -500 000 postes (David Lisnard).</div>
+            <div class="chart-holder-large"><canvas id="chartFonct"></canvas></div>
+        </div>
+    </div>
+
+    <!-- TAB 9: Boussole 2D -->
+    <div id="tab-boussole" class="tab-pane">
+        <div class="chart-box">
+            <div class="chart-header">
+                <h3>Graphique Comparatif 9 : La Grande Boussole Électorale 2D (Cartographie des 32 Candidats)</h3>
+            </div>
+            <div class="chart-desc">
+                <strong>Axe Horizontal (X) :</strong> Économie (-10 Collectivisme & Redistribution à Gauche ➔ +10 Libéralisme & Marché à Droite)<br>
+                <strong>Axe Vertical (Y) :</strong> Société & Régalien (-10 Internationalisme & Progressisme en Bas ➔ +10 Souverainisme & Ordre en Haut)
+            </div>
+            <div class="chart-holder-large" style="height: 560px;"><canvas id="chartBoussole"></canvas></div>
+        </div>
+    </div>
+
+    <!-- TAB 10: Macro Consolidé -->
+    <div id="tab-macro" class="tab-pane">
+        <div class="chart-box">
+            <div class="chart-header">
+                <h3>Graphique Comparatif 10 : Dépenses Totales Consolidées APU (Mds € en An 5)</h3>
+            </div>
+            <div class="chart-desc">Taille globale de la dépense publique de 1 394 Mds € (Lisnard) à 1 660 Mds € (Poutou) vs Référence Actuelle (1 514 Mds €).</div>
+            <div class="chart-holder-large"><canvas id="chartMacroDep"></canvas></div>
+        </div>
+    </div>
+
+    <div class="footer">
+        Grand Observatoire Présidentiel 2027 — Module Graphique Central des 32 Candidats
+    </div>
+
+    <script>
+        const candsData = [{"name": "David Lisnard", "age_retraite": 65.0, "smic_net": 1426, "tmi_ir": 40, "fiscalite_ent": 45.0, "reacteurs_epr": 14, "indice_immi": 9, "places_prison": 15000, "lpm_pct": 2.5, "suppr_fonct": -500, "score_crash": 74, "boussole_x": 9.5, "boussole_y": 6.5}, {"name": "Bruno Retailleau", "age_retraite": 65.0, "smic_net": 1426, "tmi_ir": 45, "fiscalite_ent": 35.0, "reacteurs_epr": 14, "indice_immi": 10, "places_prison": 15000, "lpm_pct": 2.3, "suppr_fonct": -400, "score_crash": 73, "boussole_x": 8.0, "boussole_y": 8.5}, {"name": "Laurent Wauquiez", "age_retraite": 65.0, "smic_net": 1426, "tmi_ir": 45, "fiscalite_ent": 40.0, "reacteurs_epr": 14, "indice_immi": 9, "places_prison": 15000, "lpm_pct": 2.3, "suppr_fonct": -350, "score_crash": 72, "boussole_x": 7.5, "boussole_y": 8.0}, {"name": "Édouard Philippe", "age_retraite": 67.0, "smic_net": 1426, "tmi_ir": 45, "fiscalite_ent": 20.0, "reacteurs_epr": 14, "indice_immi": 7, "places_prison": 15000, "lpm_pct": 2.2, "suppr_fonct": -150, "score_crash": 83, "boussole_x": 6.5, "boussole_y": 3.0}, {"name": "Marion Maréchal", "age_retraite": 65.0, "smic_net": 1426, "tmi_ir": 45, "fiscalite_ent": 50.0, "reacteurs_epr": 14, "indice_immi": 10, "places_prison": 15000, "lpm_pct": 2.5, "suppr_fonct": -300, "score_crash": 42, "boussole_x": 8.5, "boussole_y": 9.5}, {"name": "Éric Zemmour", "age_retraite": 64.5, "smic_net": 1426, "tmi_ir": 45, "fiscalite_ent": 30.0, "reacteurs_epr": 14, "indice_immi": 10, "places_prison": 15000, "lpm_pct": 2.5, "suppr_fonct": -250, "score_crash": 43, "boussole_x": 7.0, "boussole_y": 10.0}, {"name": "Florian Philippot", "age_retraite": 60.0, "smic_net": 1426, "tmi_ir": 45, "fiscalite_ent": 15.0, "reacteurs_epr": 8, "indice_immi": 10, "places_prison": 12000, "lpm_pct": 2.5, "suppr_fonct": -100, "score_crash": 38, "boussole_x": 2.0, "boussole_y": 9.5}, {"name": "François Asselineau", "age_retraite": 60.0, "smic_net": 1426, "tmi_ir": 45, "fiscalite_ent": 10.0, "reacteurs_epr": 8, "indice_immi": 9, "places_prison": 10000, "lpm_pct": 2.3, "suppr_fonct": -50, "score_crash": 35, "boussole_x": 1.0, "boussole_y": 9.0}, {"name": "Nicolas Dupont-Aignan", "age_retraite": 62.0, "smic_net": 1426, "tmi_ir": 45, "fiscalite_ent": 15.0, "reacteurs_epr": 10, "indice_immi": 9, "places_prison": 12000, "lpm_pct": 2.5, "suppr_fonct": -80, "score_crash": 52, "boussole_x": 3.0, "boussole_y": 8.5}, {"name": "Gabriel Attal", "age_retraite": 64.0, "smic_net": 1426, "tmi_ir": 45, "fiscalite_ent": 15.0, "reacteurs_epr": 14, "indice_immi": 7, "places_prison": 15000, "lpm_pct": 2.1, "suppr_fonct": -100, "score_crash": 78, "boussole_x": 5.0, "boussole_y": 2.0}, {"name": "Gérald Darmanin", "age_retraite": 64.0, "smic_net": 1426, "tmi_ir": 45, "fiscalite_ent": 15.0, "reacteurs_epr": 14, "indice_immi": 8, "places_prison": 15000, "lpm_pct": 2.2, "suppr_fonct": -80, "score_crash": 71, "boussole_x": 5.5, "boussole_y": 6.0}, {"name": "Michel Barnier", "age_retraite": 64.0, "smic_net": 1426, "tmi_ir": 45, "fiscalite_ent": 10.0, "reacteurs_epr": 14, "indice_immi": 8, "places_prison": 15000, "lpm_pct": 2.1, "suppr_fonct": -120, "score_crash": 85, "boussole_x": 5.0, "boussole_y": 4.0}, {"name": "François Bayrou", "age_retraite": 64.0, "smic_net": 1426, "tmi_ir": 45, "fiscalite_ent": 10.0, "reacteurs_epr": 14, "indice_immi": 6, "places_prison": 12000, "lpm_pct": 2.1, "suppr_fonct": -100, "score_crash": 86, "boussole_x": 4.0, "boussole_y": 1.0}, {"name": "Xavier Bertrand", "age_retraite": 64.5, "smic_net": 1426, "tmi_ir": 45, "fiscalite_ent": 25.0, "reacteurs_epr": 14, "indice_immi": 8, "places_prison": 15000, "lpm_pct": 2.2, "suppr_fonct": -150, "score_crash": 72, "boussole_x": 6.0, "boussole_y": 6.5}, {"name": "Yaël Braun-Pivet", "age_retraite": 64.0, "smic_net": 1426, "tmi_ir": 45, "fiscalite_ent": 10.0, "reacteurs_epr": 14, "indice_immi": 6, "places_prison": 12000, "lpm_pct": 2.1, "suppr_fonct": -60, "score_crash": 80, "boussole_x": 4.0, "boussole_y": 1.5}, {"name": "Marine Le Pen", "age_retraite": 61.0, "smic_net": 1426, "tmi_ir": 45, "fiscalite_ent": 15.0, "reacteurs_epr": 14, "indice_immi": 10, "places_prison": 20000, "lpm_pct": 2.5, "suppr_fonct": -80, "score_crash": 48, "boussole_x": 2.5, "boussole_y": 9.0}, {"name": "Jordan Bardella", "age_retraite": 61.0, "smic_net": 1426, "tmi_ir": 45, "fiscalite_ent": 20.0, "reacteurs_epr": 14, "indice_immi": 10, "places_prison": 20000, "lpm_pct": 2.5, "suppr_fonct": -100, "score_crash": 50, "boussole_x": 3.0, "boussole_y": 9.0}, {"name": "Jean-Marc Governatori", "age_retraite": 63.0, "smic_net": 1426, "tmi_ir": 45, "fiscalite_ent": 5.0, "reacteurs_epr": 6, "indice_immi": 5, "places_prison": 8000, "lpm_pct": 2.0, "suppr_fonct": -30, "score_crash": 68, "boussole_x": 1.0, "boussole_y": -2.0}, {"name": "Hélène Thouy", "age_retraite": 62.0, "smic_net": 1426, "tmi_ir": 45, "fiscalite_ent": -5.0, "reacteurs_epr": 0, "indice_immi": 4, "places_prison": 5000, "lpm_pct": 1.9, "suppr_fonct": 0, "score_crash": 61, "boussole_x": -1.0, "boussole_y": -4.0}, {"name": "Jean Lassalle", "age_retraite": 60.0, "smic_net": 1426, "tmi_ir": 45, "fiscalite_ent": 10.0, "reacteurs_epr": 6, "indice_immi": 7, "places_prison": 10000, "lpm_pct": 2.2, "suppr_fonct": -40, "score_crash": 62, "boussole_x": 1.0, "boussole_y": 5.0}, {"name": "Bernard Cazeneuve", "age_retraite": 64.0, "smic_net": 1450, "tmi_ir": 50, "fiscalite_ent": -10.0, "reacteurs_epr": 8, "indice_immi": 6, "places_prison": 10000, "lpm_pct": 2.1, "suppr_fonct": 0, "score_crash": 81, "boussole_x": -2.0, "boussole_y": 2.0}, {"name": "Dominique de Villepin", "age_retraite": 64.0, "smic_net": 1426, "tmi_ir": 48, "fiscalite_ent": -5.0, "reacteurs_epr": 10, "indice_immi": 6, "places_prison": 12000, "lpm_pct": 2.5, "suppr_fonct": -50, "score_crash": 70, "boussole_x": 1.5, "boussole_y": 7.0}, {"name": "François Hollande", "age_retraite": 64.0, "smic_net": 1450, "tmi_ir": 50, "fiscalite_ent": -12.0, "reacteurs_epr": 6, "indice_immi": 5, "places_prison": 10000, "lpm_pct": 2.0, "suppr_fonct": 0, "score_crash": 78, "boussole_x": -3.0, "boussole_y": -1.0}, {"name": "Carole Delga", "age_retraite": 63.0, "smic_net": 1500, "tmi_ir": 55, "fiscalite_ent": -15.0, "reacteurs_epr": 6, "indice_immi": 5, "places_prison": 8000, "lpm_pct": 2.0, "suppr_fonct": 0, "score_crash": 79, "boussole_x": -4.0, "boussole_y": 0.0}, {"name": "Raphaël Glucksmann", "age_retraite": 64.0, "smic_net": 1450, "tmi_ir": 55, "fiscalite_ent": -15.0, "reacteurs_epr": 6, "indice_immi": 4, "places_prison": 8000, "lpm_pct": 2.2, "suppr_fonct": 0, "score_crash": 76, "boussole_x": -3.5, "boussole_y": -5.0}, {"name": "Marine Tondelier", "age_retraite": 61.0, "smic_net": 1500, "tmi_ir": 60, "fiscalite_ent": -25.0, "reacteurs_epr": 0, "indice_immi": 3, "places_prison": 0, "lpm_pct": 1.8, "suppr_fonct": 0, "score_crash": 56, "boussole_x": -6.0, "boussole_y": -7.0}, {"name": "François Ruffin", "age_retraite": 60.0, "smic_net": 1600, "tmi_ir": 75, "fiscalite_ent": -30.0, "reacteurs_epr": 4, "indice_immi": 4, "places_prison": 0, "lpm_pct": 1.9, "suppr_fonct": 0, "score_crash": 55, "boussole_x": -7.5, "boussole_y": 1.0}, {"name": "Clémentine Autain", "age_retraite": 60.0, "smic_net": 1600, "tmi_ir": 65, "fiscalite_ent": -25.0, "reacteurs_epr": 0, "indice_immi": 2, "places_prison": 0, "lpm_pct": 1.8, "suppr_fonct": 0, "score_crash": 54, "boussole_x": -8.0, "boussole_y": -6.0}, {"name": "Fabien Roussel", "age_retraite": 60.0, "smic_net": 1800, "tmi_ir": 75, "fiscalite_ent": -40.0, "reacteurs_epr": 14, "indice_immi": 4, "places_prison": 5000, "lpm_pct": 1.8, "suppr_fonct": 0, "score_crash": 52, "boussole_x": -8.5, "boussole_y": 2.0}, {"name": "Jean-Luc Mélenchon", "age_retraite": 60.0, "smic_net": 1600, "tmi_ir": 90, "fiscalite_ent": -45.0, "reacteurs_epr": 0, "indice_immi": 2, "places_prison": 0, "lpm_pct": 1.8, "suppr_fonct": 0, "score_crash": 44, "boussole_x": -9.0, "boussole_y": -3.0}, {"name": "Nathalie Arthaud", "age_retraite": 60.0, "smic_net": 2000, "tmi_ir": 90, "fiscalite_ent": -70.0, "reacteurs_epr": 0, "indice_immi": 1, "places_prison": 0, "lpm_pct": 1.0, "suppr_fonct": 0, "score_crash": 28, "boussole_x": -10.0, "boussole_y": -8.0}, {"name": "Philippe Poutou", "age_retraite": 55.0, "smic_net": 2000, "tmi_ir": 90, "fiscalite_ent": -80.0, "reacteurs_epr": 0, "indice_immi": 1, "places_prison": 0, "lpm_pct": 1.0, "suppr_fonct": 0, "score_crash": 25, "boussole_x": -10.0, "boussole_y": -9.0}];
+        
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            
+            const btns = document.querySelectorAll('.tab-btn');
+            btns.forEach(btn => {
+                if (btn.getAttribute('onclick').includes(tabId)) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        // Names sorted alphabetically or by orientation
+        const names = candsData.map(c => c.name);
+
+        // 1. Retraites Chart
+        new Chart(document.getElementById('chartRetraites'), {
+            type: 'bar',
+            data: {
+                labels: names,
+                datasets: [{
+                    label: 'Âge Légal de Départ (ans)',
+                    data: candsData.map(c => c.age_retraite),
+                    backgroundColor: candsData.map(c => c.age_retraite >= 65 ? '#ef4444' : c.age_retraite >= 64 ? '#f59e0b' : '#10b981')
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    y: { min: 50, max: 70, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    x: { ticks: { color: '#94a3b8', font: { size: 10 }, maxRotation: 60 }, grid: { display: false } }
+                },
+                plugins: { legend: { labels: { color: '#fff' } } }
+            }
+        });
+
+        // 2. Salaires Chart
+        new Chart(document.getElementById('chartSalaires'), {
+            type: 'bar',
+            data: {
+                labels: names,
+                datasets: [{
+                    label: 'SMIC Net Mensuel (€)',
+                    data: candsData.map(c => c.smic_net),
+                    backgroundColor: '#3b82f6'
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    y: { min: 1300, max: 2100, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    x: { ticks: { color: '#94a3b8', font: { size: 10 }, maxRotation: 60 }, grid: { display: false } }
+                },
+                plugins: { legend: { labels: { color: '#fff' } } }
+            }
+        });
+
+        // 3. Fiscalite Chart (TMI IR)
+        new Chart(document.getElementById('chartFiscalite'), {
+            type: 'bar',
+            data: {
+                labels: names,
+                datasets: [{
+                    label: 'Taux Marginal Max IR (%)',
+                    data: candsData.map(c => c.tmi_ir),
+                    backgroundColor: candsData.map(c => c.tmi_ir > 50 ? '#ec4899' : '#0ea5e9')
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    y: { min: 30, max: 100, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    x: { ticks: { color: '#94a3b8', font: { size: 10 }, maxRotation: 60 }, grid: { display: false } }
+                },
+                plugins: { legend: { labels: { color: '#fff' } } }
+            }
+        });
+
+        // 4. Entreprises Chart
+        new Chart(document.getElementById('chartEntreprises'), {
+            type: 'bar',
+            data: {
+                labels: names,
+                datasets: [{
+                    label: 'Choc Fiscal Entreprises (+ Allègement / - Surtaxe en Mds €)',
+                    data: candsData.map(c => c.fiscalite_ent),
+                    backgroundColor: candsData.map(c => c.fiscalite_ent >= 0 ? '#10b981' : '#f43f5e')
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    y: { ticks: { color: '#94a3b8', callback: v => (v > 0 ? '+' : '') + v + ' Mds' }, grid: { color: 'rgba(255,255,255,0.08)' } },
+                    x: { ticks: { color: '#94a3b8', font: { size: 10 }, maxRotation: 60 }, grid: { display: false } }
+                },
+                plugins: { legend: { labels: { color: '#fff' } } }
+            }
+        });
+
+        // 5. Energie Chart (EPR)
+        new Chart(document.getElementById('chartEnergie'), {
+            type: 'bar',
+            data: {
+                labels: names,
+                datasets: [{
+                    label: 'Nouveaux Réacteurs EPR Prévus',
+                    data: candsData.map(c => c.reacteurs_epr),
+                    backgroundColor: '#eab308'
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    y: { min: 0, max: 16, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    x: { ticks: { color: '#94a3b8', font: { size: 10 }, maxRotation: 60 }, grid: { display: false } }
+                },
+                plugins: { legend: { labels: { color: '#fff' } } }
+            }
+        });
+
+        // 6. Immigration Chart
+        new Chart(document.getElementById('chartImmigration'), {
+            type: 'bar',
+            data: {
+                labels: names,
+                datasets: [{
+                    label: 'Indice de Fermeté Migratoire (/10)',
+                    data: candsData.map(c => c.indice_immi),
+                    backgroundColor: '#8b5cf6'
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    y: { min: 0, max: 10, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    x: { ticks: { color: '#94a3b8', font: { size: 10 }, maxRotation: 60 }, grid: { display: false } }
+                },
+                plugins: { legend: { labels: { color: '#fff' } } }
+            }
+        });
+
+        // 7A. Prisons Chart
+        new Chart(document.getElementById('chartPrisons'), {
+            type: 'bar',
+            data: {
+                labels: names,
+                datasets: [{
+                    label: 'Places de Prison',
+                    data: candsData.map(c => c.places_prison),
+                    backgroundColor: '#06b6d4'
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    x: { ticks: { color: '#94a3b8', font: { size: 9 }, maxRotation: 60 }, grid: { display: false } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // 7B. LPM Chart
+        new Chart(document.getElementById('chartLPM'), {
+            type: 'bar',
+            data: {
+                labels: names,
+                datasets: [{
+                    label: 'LPM (% PIB)',
+                    data: candsData.map(c => c.lpm_pct),
+                    backgroundColor: '#3b82f6'
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    y: { min: 0.5, max: 3.0, ticks: { color: '#94a3b8', callback: v => v + ' %' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    x: { ticks: { color: '#94a3b8', font: { size: 9 }, maxRotation: 60 }, grid: { display: false } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // 8. Fonctionnaires Chart
+        new Chart(document.getElementById('chartFonct'), {
+            type: 'bar',
+            data: {
+                labels: names,
+                datasets: [{
+                    label: 'Suppression Fonctionnaires (Milliers)',
+                    data: candsData.map(c => c.suppr_fonct),
+                    backgroundColor: '#f43f5e'
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    y: { ticks: { color: '#94a3b8', callback: v => v + ' k' }, grid: { color: 'rgba(255,255,255,0.08)' } },
+                    x: { ticks: { color: '#94a3b8', font: { size: 10 }, maxRotation: 60 }, grid: { display: false } }
+                },
+                plugins: { legend: { labels: { color: '#fff' } } }
+            }
+        });
+
+        // 9. Boussole 2D (Scatter Plot)
+        const scatterData = candsData.map(c => ({
+            x: c.boussole_x,
+            y: c.boussole_y,
+            name: c.name
+        }));
+
+        new Chart(document.getElementById('chartBoussole'), {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Candidats 2027',
+                    data: scatterData,
+                    backgroundColor: candsData.map(c => c.boussole_x > 0 ? '#3b82f6' : '#ef4444'),
+                    pointRadius: 6,
+                    pointHoverRadius: 9
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        min: -11, max: 11,
+                        title: { display: true, text: '◄ Collectivisme / État Social (Gauche) — Libéralisme / Marché (Droite) ►', color: '#cbd5e1' },
+                        ticks: { color: '#94a3b8' },
+                        grid: { color: ctx => ctx.tick.value === 0 ? '#ffffff' : 'rgba(255,255,255,0.06)', lineWidth: ctx => ctx.tick.value === 0 ? 2 : 1 }
+                    },
+                    y: {
+                        min: -11, max: 11,
+                        title: { display: true, text: '▲ Souverainisme & Ordre — Internationalisme & Progressisme ▼', color: '#cbd5e1' },
+                        ticks: { color: '#94a3b8' },
+                        grid: { color: ctx => ctx.tick.value === 0 ? '#ffffff' : 'rgba(255,255,255,0.06)', lineWidth: ctx => ctx.tick.value === 0 ? 2 : 1 }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) {
+                                return ctx.raw.name + ' (Éco: ' + ctx.raw.x + ', Régalien: ' + ctx.raw.y + ')';
+                            }
+                        }
+                    },
+                    legend: { display: false }
+                }
+            }
+        });
+
+        // 10. Macro Depenses Chart
+        const macroDepValues = [
+            1394.0, 1411.5, 1420.0, 1434.0, 1410.0, 1410.0, 1430.0, 1470.0, 1460.0, 1460.0,
+            1465.0, 1470.0, 1450.0, 1460.0, 1485.0, 1485.0, 1480.0, 1500.0, 1505.0, 1510.0,
+            1526.0, 1528.0, 1525.0, 1534.0, 1535.0, 1570.0, 1580.0, 1600.0, 1620.0, 1640.0,
+            1650.0, 1660.0
+        ];
+
+        new Chart(document.getElementById('chartMacroDep'), {
+            type: 'bar',
+            data: {
+                labels: names,
+                datasets: [{
+                    label: 'Dépenses Consolidées APU (Mds €)',
+                    data: macroDepValues,
+                    backgroundColor: macroDepValues.map(v => v < 1514 ? '#10b981' : '#f43f5e')
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    y: { min: 1350, max: 1700, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    x: { ticks: { color: '#94a3b8', font: { size: 10 }, maxRotation: 60 }, grid: { display: false } }
+                },
+                plugins: { legend: { labels: { color: '#fff' } } }
+            }
+        });
+    </script>
+</body>
+</html>

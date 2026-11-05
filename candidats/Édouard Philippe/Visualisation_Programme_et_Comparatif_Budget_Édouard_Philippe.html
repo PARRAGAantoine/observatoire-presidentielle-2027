@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Graphiques du Programme d'Édouard Philippe & Comparatif Budget de l'État</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 24px;
+      line-height: 1.5;
+    }
+    .header {
+      text-align: center;
+      background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
+      border: 1px solid #3b82f6;
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+    }
+    .header h1 { font-size: 26px; font-weight: 800; color: #ffffff; margin-bottom: 8px; }
+    .header p { font-size: 15px; color: #93c5fd; }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px;
+      margin-bottom: 26px;
+    }
+    .kpi-card {
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 18px;
+      border-left: 5px solid #3b82f6;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
+    .kpi-card.green { border-left-color: #22c55e; }
+    .kpi-card.blue { border-left-color: #38bdf8; }
+    .kpi-card.amber { border-left-color: #f59e0b; }
+    .kpi-card.purple { border-left-color: #a855f7; }
+    .kpi-card.red { border-left-color: #ef4444; }
+    .kpi-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.7px; color: #94a3b8; }
+    .kpi-val { font-size: 24px; font-weight: 800; margin: 6px 0; color: #fff; }
+    .kpi-sub { font-size: 12px; color: #cbd5e1; }
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(560px, 1fr));
+      gap: 24px;
+      margin-bottom: 28px;
+    }
+    .chart-box {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+    }
+    .chart-box.full-width {
+      grid-column: 1 / -1;
+    }
+    .chart-box h2 {
+      font-size: 17px;
+      color: #e2e8f0;
+      margin-bottom: 6px;
+      border-bottom: 1px solid #334155;
+      padding-bottom: 8px;
+    }
+    .chart-box p.desc {
+      font-size: 13px;
+      color: #94a3b8;
+      margin-bottom: 14px;
+    }
+    .canvas-holder {
+      position: relative;
+      height: 360px;
+      width: 100%;
+    }
+    .canvas-holder.tall {
+      height: 430px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 13.5px;
+    }
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #334155;
+      text-align: left;
+    }
+    th { background: #0f172a; color: #93c5fd; font-weight: 700; }
+    tr:hover { background: #26354d; }
+    .num { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 11.5px;
+      font-weight: 700;
+    }
+    .b-eco { background: rgba(34,197,94,0.2); color: #4ade80; }
+    .b-tax { background: rgba(56,189,248,0.2); color: #38bdf8; }
+    .b-reg { background: rgba(245,158,11,0.2); color: #fbbf24; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>PROGRAMME D'ÉDOUARD PHILIPPE (HORIZONS) VS BUDGET ACTUEL DE L'ÉTAT</h1>
+    <p>Visualisation complète du programme présidentiel (An 1 & An 5) et comparaison directe avec les Comptes Publics actuels (1 514 Mds € APU / 503,6 Mds € État)</p>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card green">
+      <div class="kpi-title">Économies sur la Dépense</div>
+      <div class="kpi-val">-105,0 Mds €/an</div>
+      <div class="kpi-sub">An 1 : -45 Mds € | Net après régalien : -86,5 Mds €/an (Dépense ramenée à 47,5 % du PIB)</div>
+    </div>
+    <div class="kpi-card purple">
+      <div class="kpi-title">Le « Deal Fiscal » Entreprises</div>
+      <div class="kpi-val">-50 Mds / -50 Mds</div>
+      <div class="kpi-sub">-50 Mds € d'impôts de production (fin C3S/CVAE) financés par -50 Mds € d'aides supprimées</div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-title">Heures au-delà de 37h</div>
+      <div class="kpi-val">0 Cotisation</div>
+      <div class="kpi-sub">Zéro charge patronale au-delà de 37h (+180 à +200 € net/mois pour 39h travaillées)</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-title">Réarmement Régalien & École</div>
+      <div class="kpi-val">+18,5 Mds €/an</div>
+      <div class="kpi-sub">Défense 2,5% PIB (+6 Mds), Narcotrafic/Police (+4,5 Mds), Prisons (+3,5 Mds), Soutien IA (+3 Mds)</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-title">Cible Déficit Public (2032)</div>
+      <div class="kpi-val">-2,0 % du PIB</div>
+      <div class="kpi-sub">Déficit ramené de -146 Mds € (5,1%) à -107 Mds € (règle d'or constitutionnelle par référendum)</div>
+    </div>
+  </div>
+
+  <div class="charts-grid">
+
+    <!-- GRAPHIQUE 1 : PROGRAMME PAR FAMILLE -->
+    <div class="chart-box">
+      <h2>1. Le Programme d'Édouard Philippe par Famille (An 1 vs An 5)</h2>
+      <p class="desc">En vert : les économies brutes (+105 Mds €/an). En bleu : les allègements fiscaux et de cotisations (-73 Mds €/an). En orange : les réinvestissements régaliens (-18,5 Mds €/an).</p>
+      <div class="canvas-holder">
+        <canvas id="chartProgrammeFamilles"></canvas>
+      </div>
+    </div>
+
+    <!-- GRAPHIQUE 2 : RÉPARTITION DES ÉCONOMIES -->
+    <div class="chart-box">
+      <h2>2. Architecture des Économies Brutes d'Horizons (105 Mds €/an)</h2>
+      <p class="desc">50 % sur la sphère sociale (retraites, chômage, santé), 25 % sur l'État et la fonction publique (-250 000 postes), et 25 % gagés sur les subventions inefficaces.</p>
+      <div class="canvas-holder">
+        <canvas id="chartRegleOr"></canvas>
+      </div>
+    </div>
+
+    <!-- GRAPHIQUE 3 : COMPARATIF MACRO -->
+    <div class="chart-box">
+      <h2>3. Comparatif Global : Budget Actuel vs Budget Prévu par Édouard Philippe</h2>
+      <p class="desc">Comparaison des Dépenses publiques, des Recettes publiques et du Déficit (France entière APU et Budget Général de l'État seul, en Mds €).</p>
+      <div class="canvas-holder">
+        <canvas id="chartMacroComp"></canvas>
+      </div>
+    </div>
+
+    <!-- GRAPHIQUE 4 : TRAJECTOIRE QUINQUENNALE -->
+    <div class="chart-box">
+      <h2>4. Trajectoire Quinquennale : Dépenses vs Recettes (2026 ➔ An 5)</h2>
+      <p class="desc">Convergence progressive des finances publiques et retour du déficit public sous les 3 % du PIB conformément à la règle d'or.</p>
+      <div class="canvas-holder">
+        <canvas id="chartTrajectoire"></canvas>
+      </div>
+    </div>
+
+    <!-- GRAPHIQUE 5 : COMPARAISON DES 10 PÔLES DE DÉPENSES -->
+    <div class="chart-box full-width">
+      <h2>5. Où va l'argent : Comparaison Pôle par Pôle (Budget Actuel vs Édouard Philippe An 5)</h2>
+      <p class="desc">Baisse ciblée sur les subventions économiques (-48 Mds) et la gestion sociale, sanctuarisation de l'École (+5 Mds) et hausse prioritaire du Régalien (+14 Mds €/an).</p>
+      <div class="canvas-holder tall">
+        <canvas id="chartPolesDepenses"></canvas>
+      </div>
+    </div>
+
+    <!-- GRAPHIQUE 6 : COMPARAISON DES RECETTES PAR FAMILLE -->
+    <div class="chart-box full-width">
+      <h2>6. D'où vient l'argent : Comparaison des Recettes & Impôts (Actuel vs Édouard Philippe An 5)</h2>
+      <p class="desc">Forte baisse des impôts de production (-45 Mds €) et allègement sur les heures travaillées au-delà de 37h (-25 Mds €), avec moratoire fiscal et zéro hausse de TVA.</p>
+      <div class="canvas-holder">
+        <canvas id="chartRecettesComp"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TABLEAU COMPARATIF LIGNE À LIGNE -->
+  <div class="chart-box">
+    <h2>7. Tableau Comparatif Synthétique : Budget Actuel de la France vs Budget Édouard Philippe</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Pôle Budgétaire (Dépenses & Recettes)</th>
+          <th>Nature</th>
+          <th class="num">Budget Actuel</th>
+          <th class="num">Philippe An 1</th>
+          <th class="num">Philippe An 5</th>
+          <th class="num">Écart An 5</th>
+          <th>Mesures Phares du Programme Philippe</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>1. Retraites (CNAV, Agirc-Arrco, SRE)</strong></td>
+          <td><span class="badge b-eco">Dépense Sociale</span></td>
+          <td class="num">382,0 Mds €</td>
+          <td class="num">378,0 Mds €</td>
+          <td class="num">367,0 Mds €</td>
+          <td class="num" style="color:#4ade80;">-15,0 Mds €</td>
+          <td>Garantie équilibre 64-65 ans, sous-indexation pensions > 2 500 € (-15 Mds) + étage capitalisation collective</td>
+        </tr>
+        <tr>
+          <td><strong>2. Santé & Hôpital Public</strong></td>
+          <td><span class="badge b-eco">Dépense Sociale</span></td>
+          <td class="num">254,0 Mds €</td>
+          <td class="num">252,0 Mds €</td>
+          <td class="num">246,0 Mds €</td>
+          <td class="num" style="color:#4ade80;">-8,0 Mds €</td>
+          <td>Dépenser mieux à l'hôpital, débureaucratisation des ARS, régulation actes redondants, prévention (-8 Mds)</td>
+        </tr>
+        <tr>
+          <td><strong>3. Solidarité, Famille, APL & RSA</strong></td>
+          <td><span class="badge b-eco">Dépense Sociale</span></td>
+          <td class="num">212,0 Mds €</td>
+          <td class="num">206,0 Mds €</td>
+          <td class="num">194,0 Mds €</td>
+          <td class="num" style="color:#4ade80;">-18,0 Mds €</td>
+          <td>Conditionnement RSA à 15-20h d'activité, prestation unifiée plafonnée, lutte anti-fraude (-18 Mds)</td>
+        </tr>
+        <tr>
+          <td><strong>4. Collectivités Locales</strong></td>
+          <td><span class="badge b-eco">Dépense Locale</span></td>
+          <td class="num">156,0 Mds €</td>
+          <td class="num">154,0 Mds €</td>
+          <td class="num">148,0 Mds €</td>
+          <td class="num" style="color:#4ade80;">-8,0 Mds €</td>
+          <td>Choc de simplification normative et moratoire de 5 ans sur les normes environnementales locales (-8 Mds)</td>
+        </tr>
+        <tr>
+          <td><strong>5. Éducation & Recherche</strong></td>
+          <td><span class="badge b-reg">Priorité Éducative</span></td>
+          <td class="num">115,0 Mds €</td>
+          <td class="num">116,0 Mds €</td>
+          <td class="num">120,0 Mds €</td>
+          <td class="num" style="color:#fbbf24;">+5,0 Mds €</td>
+          <td>Chefs d'établissement patrons de leur école, service public universel de soutien scolaire IA, primes mérite (+5 Mds)</td>
+        </tr>
+        <tr>
+          <td><strong>6. RÉGALIEN : Défense, Police, Justice</strong></td>
+          <td><span class="badge b-reg">Hausse Régalienne</span></td>
+          <td class="num">107,0 Mds €</td>
+          <td class="num">111,0 Mds €</td>
+          <td class="num">121,0 Mds €</td>
+          <td class="num" style="color:#fbbf24;">+14,0 Mds €</td>
+          <td>Défense à 2,5% PIB (+6 Mds), Plan narcotrafic / Intérieur (+4,5 Mds), Prisons 15 000 places (+3,5 Mds)</td>
+        </tr>
+        <tr>
+          <td><strong>7. Économie, Agences & Subventions</strong></td>
+          <td><span class="badge b-eco">Coupe Subventions</span></td>
+          <td class="num">105,0 Mds €</td>
+          <td class="num">82,0 Mds €</td>
+          <td class="num">57,0 Mds €</td>
+          <td class="num" style="color:#4ade80;">-48,0 Mds €</td>
+          <td>COUPE LA PLUS FORTE : Fin de 40 Mds € de subventions inefficaces (deal fiscal) + fusion agences d'État</td>
+        </tr>
+        <tr>
+          <td><strong>8. Chômage & Insertion (Unédic)</strong></td>
+          <td><span class="badge b-eco">Dépense Sociale</span></td>
+          <td class="num">68,0 Mds €</td>
+          <td class="num">64,0 Mds €</td>
+          <td class="num">60,0 Mds €</td>
+          <td class="num" style="color:#4ade80;">-8,0 Mds €</td>
+          <td>Contracyclicité accrue de l'assurance-chômage, contrôle des offres d'emploi refusées (-8 Mds)</td>
+        </tr>
+        <tr>
+          <td><strong>9. Charge de la Dette (Intérêts)</strong></td>
+          <td><span class="badge b-eco">Dette Souveraine</span></td>
+          <td class="num">58,0 Mds €</td>
+          <td class="num">58,0 Mds €</td>
+          <td class="num">58,0 Mds €</td>
+          <td class="num">0,0 Md €</td>
+          <td>Stabilisation de la charge de la dette grâce au rétablissement de la crédibilité financière</td>
+        </tr>
+        <tr>
+          <td><strong>10. Administration Générale État & UE</strong></td>
+          <td><span class="badge b-eco">Fonction Publique</span></td>
+          <td class="num">57,0 Mds €</td>
+          <td class="num">54,0 Mds €</td>
+          <td class="num">46,5 Mds €</td>
+          <td class="num" style="color:#4ade80;">-10,5 Mds €</td>
+          <td>Non-remplacement d'un fonctionnaire sur 3 (-250 000 postes administratifs) et train de vie de l'État</td>
+        </tr>
+        <tr style="background:#0f172a; font-weight:800;">
+          <td><strong>TOTAL DÉPENSES PUBLIQUES (APU)</strong></td>
+          <td><strong>52,7% ➔ 47,5% PIB</strong></td>
+          <td class="num"><strong>1 514,0 Mds €</strong></td>
+          <td class="num"><strong>1 475,0 Mds €</strong></td>
+          <td class="num"><strong>1 427,5 Mds €</strong></td>
+          <td class="num" style="color:#4ade80;"><strong>-86,5 Mds €</strong></td>
+          <td><strong>-105,0 Mds € d'économies brutes + 18,5 Mds € de réinvestissements régaliens et école</strong></td>
+        </tr>
+        <tr style="background:#172554; font-weight:800;">
+          <td><strong>TOTAL RECETTES PUBLIQUES (APU)</strong></td>
+          <td><strong>44,7% ➔ 44,0% PIB</strong></td>
+          <td class="num"><strong>1 368,0 Mds €</strong></td>
+          <td class="num"><strong>1 345,0 Mds €</strong></td>
+          <td class="num"><strong>1 320,0 Mds €</strong></td>
+          <td class="num" style="color:#38bdf8;"><strong>-48,0 Mds €</strong></td>
+          <td><strong>-73,0 Mds € de baisses d'impôts et cotisations + 25,0 Mds € de retour croissance et heures sup</strong></td>
+        </tr>
+        <tr style="background:#31102F; font-weight:800;">
+          <td><strong>DÉFICIT PUBLIC (SOLDE MAASTRICHT)</strong></td>
+          <td><strong>-5,1% ➔ -2,0% PIB</strong></td>
+          <td class="num"><strong>-146,0 Mds €</strong></td>
+          <td class="num"><strong>-130,0 Mds €</strong></td>
+          <td class="num"><strong>-107,5 Mds €</strong></td>
+          <td class="num" style="color:#4ade80;"><strong>+38,5 Mds €</strong></td>
+          <td><strong>Règle d'or budgétaire constitutionnelle : déficit ramené à ~2,0% du PIB nominal</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    Chart.defaults.color = '#cbd5e1';
+    Chart.defaults.font.family = "'Segoe UI', system-ui, sans-serif";
+
+    // 1. Programme par Famille
+    new Chart(document.getElementById('chartProgrammeFamilles'), {
+      type: 'bar',
+      data: {
+        labels: [
+          'F1. Fonction Publique (-250k)',
+          'F2. Fin Subventions (-50 Mds)',
+          'F3. Retraites, Chômage & Santé',
+          'F4. Fraude, Immigration & Normes',
+          'F5. Deal Fiscal Impôts Prod.',
+          'F6. Heures > 37h & Ménages',
+          'F7. Réarmement Régalien & École'
+        ],
+        datasets: [
+          {
+            label: 'Impact An 1 (Mds €)',
+            data: [7.5, 18.5, 13.0, 5.5, -20.0, -9.0, -6.0],
+            backgroundColor: 'rgba(148, 163, 184, 0.7)',
+            borderRadius: 4
+          },
+          {
+            label: 'Impact An 5 Plein Régime (Mds €/an)',
+            data: [25.0, 50.0, 39.0, 13.0, -50.0, -23.0, -18.5],
+            backgroundColor: [
+              '#22c55e', '#16a34a', '#15803d', '#4ade80',
+              '#38bdf8', '#818cf8', '#f59e0b'
+            ],
+            borderRadius: 4
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { grid: { color: '#334155' }, title: { display: true, text: '+ Économies / - Baisses d\'impôts & Régalien (Mds €)' } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+
+    // 2. Répartition des Économies
+    new Chart(document.getElementById('chartRegleOr'), {
+      type: 'doughnut',
+      data: {
+        labels: [
+          '50 % Sphère Sociale : Retraites, Chômage, Santé (50 Mds €/an)',
+          '25 % Fin de Subventions Inefficaces : Deal fiscal (30 Mds €/an)',
+          '25 % État & Fonction Publique : -250 000 postes administratifs (25 Mds €/an)'
+        ],
+        datasets: [{
+          data: [50.0, 30.0, 25.0],
+          backgroundColor: ['#22c55e', '#a855f7', '#38bdf8'],
+          borderColor: '#1e293b',
+          borderWidth: 3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 14, padding: 12 } }
+        }
+      }
+    });
+
+    // 3. Comparatif Macro
+    new Chart(document.getElementById('chartMacroComp'), {
+      type: 'bar',
+      data: {
+        labels: [
+          'Dépenses Publiques (APU)',
+          'Recettes Publiques (APU)',
+          'Déficit Public (Maastricht)',
+          'Budget Général État seul'
+        ],
+        datasets: [
+          {
+            label: 'Budget Actuel (Mds €)',
+            data: [1514.0, 1368.0, 146.0, 503.6],
+            backgroundColor: '#ef4444',
+            borderRadius: 5
+          },
+          {
+            label: 'Budget Philippe An 1 (Mds €)',
+            data: [1475.0, 1345.0, 130.0, 483.6],
+            backgroundColor: '#f59e0b',
+            borderRadius: 5
+          },
+          {
+            label: 'Budget Philippe An 5 (Mds €)',
+            data: [1427.5, 1320.0, 107.5, 460.0],
+            backgroundColor: '#22c55e',
+            borderRadius: 5
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { grid: { color: '#334155' }, title: { display: true, text: 'Milliards d\'Euros (Mds €)' } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+
+    // 4. Trajectoire Quinquennale
+    new Chart(document.getElementById('chartTrajectoire'), {
+      type: 'line',
+      data: {
+        labels: ['Actuel (2026)', 'An 1 (2027/28)', 'An 2 (2029)', 'An 3 (2030)', 'An 4 (2031)', 'An 5 (2032)'],
+        datasets: [
+          {
+            label: 'Dépenses Publiques Totales (Mds €)',
+            data: [1514.0, 1475.0, 1460.0, 1448.0, 1436.0, 1427.5],
+            borderColor: '#ef4444',
+            backgroundColor: 'rgba(239, 68, 68, 0.15)',
+            tension: 0.3,
+            fill: true,
+            borderWidth: 3
+          },
+          {
+            label: 'Recettes Publiques Totales (Mds €)',
+            data: [1368.0, 1345.0, 1338.0, 1330.0, 1324.0, 1320.0],
+            borderColor: '#38bdf8',
+            backgroundColor: 'rgba(56, 189, 248, 0.1)',
+            tension: 0.3,
+            fill: true,
+            borderWidth: 3
+          },
+          {
+            label: 'Déficit Public Maastricht (Mds €)',
+            data: [146.0, 130.0, 122.0, 118.0, 112.0, 107.5],
+            borderColor: '#22c55e',
+            borderDash: [6, 4],
+            tension: 0.3,
+            borderWidth: 3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { grid: { color: '#334155' }, title: { display: true, text: 'Mds €' } }
+        }
+      }
+    });
+
+    // 5. Comparaison Pôle par Pôle
+    new Chart(document.getElementById('chartPolesDepenses'), {
+      type: 'bar',
+      data: {
+        labels: [
+          '1. Retraites (382 ➔ 367)',
+          '2. Santé & Hôpital (254 ➔ 246)',
+          '3. Solidarité, Famille, APL, RSA (212 ➔ 194)',
+          '4. Collectivités Locales (156 ➔ 148)',
+          '5. Éducation & Recherche (115 ➔ 120)',
+          '6. RÉGALIEN : Défense, Police, Justice (107 ➔ 121)',
+          '7. Économie & Fin Subventions (105 ➔ 57)',
+          '8. Chômage & Insertion (68 ➔ 60)',
+          '9. Charge de la Dette (58 ➔ 58)',
+          '10. Admin. Fonction Publique (-250k) (57 ➔ 46.5)'
+        ],
+        datasets: [
+          {
+            label: 'Budget Actuel de la France (1 514 Mds €)',
+            data: [382.0, 254.0, 212.0, 156.0, 115.0, 107.0, 105.0, 68.0, 58.0, 57.0],
+            backgroundColor: '#64748b',
+            borderRadius: 4
+          },
+          {
+            label: 'Budget Édouard Philippe An 5 (1 427,5 Mds €)',
+            data: [367.0, 246.0, 194.0, 148.0, 120.0, 121.0, 57.0, 60.0, 58.0, 46.5],
+            backgroundColor: [
+              '#38bdf8', '#38bdf8', '#38bdf8', '#38bdf8',
+              '#fbbf24', '#22c55e', '#38bdf8', '#38bdf8',
+              '#94a3b8', '#38bdf8'
+            ],
+            borderRadius: 4
+          }
+        ]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { grid: { color: '#334155' }, title: { display: true, text: 'Milliards d\'Euros (Mds €)' } },
+          y: { grid: { display: false } }
+        }
+      }
+    });
+
+    // 6. Comparaison Recettes
+    new Chart(document.getElementById('chartRecettesComp'), {
+      type: 'bar',
+      data: {
+        labels: [
+          '1. Cotisations & CSG (-25 Mds €)',
+          '2. TVA & Consommation (0 hausse)',
+          '3. IS & Impôts Production (-45 Mds €)',
+          '4. Impôt sur le Revenu & PFU (0 hausse)',
+          '5. Patrimoine & Donations (-3 Mds €)',
+          '6. Non-Fiscal + Retour Croissance (+25 Mds €)'
+        ],
+        datasets: [
+          {
+            label: 'Recettes Actuelles (1 368 Mds €)',
+            data: [678.0, 319.0, 137.0, 95.0, 92.0, 47.0],
+            backgroundColor: '#64748b',
+            borderRadius: 5
+          },
+          {
+            label: 'Recettes Édouard Philippe An 5 (1 320 Mds €)',
+            data: [653.0, 319.0, 92.0, 95.0, 89.0, 72.0],
+            backgroundColor: '#38bdf8',
+            borderRadius: 5
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { grid: { color: '#334155' }, title: { display: true, text: 'Milliards d\'Euros (Mds €)' } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  </script>
+</body>
+</html>

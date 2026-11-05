@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Graphiques du Programme de David Lisnard & Comparatif Budget de l'État</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 24px;
+      line-height: 1.5;
+    }
+    .header {
+      text-align: center;
+      background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
+      border: 1px solid #3b82f6;
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+    }
+    .header h1 { font-size: 26px; font-weight: 800; color: #ffffff; margin-bottom: 8px; }
+    .header p { font-size: 15px; color: #93c5fd; }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px;
+      margin-bottom: 26px;
+    }
+    .kpi-card {
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 18px;
+      border-left: 5px solid #3b82f6;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
+    .kpi-card.green { border-left-color: #22c55e; }
+    .kpi-card.blue { border-left-color: #38bdf8; }
+    .kpi-card.amber { border-left-color: #f59e0b; }
+    .kpi-card.purple { border-left-color: #a855f7; }
+    .kpi-card.red { border-left-color: #ef4444; }
+    .kpi-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.7px; color: #94a3b8; }
+    .kpi-val { font-size: 24px; font-weight: 800; margin: 6px 0; color: #fff; }
+    .kpi-sub { font-size: 12px; color: #cbd5e1; }
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(560px, 1fr));
+      gap: 24px;
+      margin-bottom: 28px;
+    }
+    .chart-box {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+    }
+    .chart-box.full-width {
+      grid-column: 1 / -1;
+    }
+    .chart-box h2 {
+      font-size: 17px;
+      color: #e2e8f0;
+      margin-bottom: 6px;
+      border-bottom: 1px solid #334155;
+      padding-bottom: 8px;
+    }
+    .chart-box p.desc {
+      font-size: 13px;
+      color: #94a3b8;
+      margin-bottom: 14px;
+    }
+    .canvas-holder {
+      position: relative;
+      height: 360px;
+      width: 100%;
+    }
+    .canvas-holder.tall {
+      height: 430px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 13.5px;
+    }
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #334155;
+      text-align: left;
+    }
+    th { background: #0f172a; color: #93c5fd; font-weight: 700; }
+    tr:hover { background: #26354d; }
+    .num { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 11.5px;
+      font-weight: 700;
+    }
+    .b-eco { background: rgba(34,197,94,0.2); color: #4ade80; }
+    .b-tax { background: rgba(56,189,248,0.2); color: #38bdf8; }
+    .b-reg { background: rgba(245,158,11,0.2); color: #fbbf24; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>PROGRAMME DE DAVID LISNARD (NOUVELLE ÉNERGIE) VS BUDGET ACTUEL DE L'ÉTAT</h1>
+    <p>Visualisation complète du programme présidentiel (An 1 & An 5) et comparaison directe avec les Comptes Publics actuels (1 514 Mds € APU / 503,6 Mds € État)</p>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card green">
+      <div class="kpi-title">Économies sur la Dépense</div>
+      <div class="kpi-val">-205,0 Mds €/an</div>
+      <div class="kpi-sub">Dès An 1 : -80,0 Mds € | Net après régalien : -190 Mds €/an (52,7% ➔ 43,5% du PIB)</div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-title">Pilier 1 (60%) : Pouvoir d'Achat</div>
+      <div class="kpi-val">-120,0 Mds €/an</div>
+      <div class="kpi-sub">Baisse massive des cotisations salariales (+200 à +400 €/mois net pour un salarié médian)</div>
+    </div>
+    <div class="kpi-card purple">
+      <div class="kpi-title">Pilier 2 (20%) : Entreprises</div>
+      <div class="kpi-val">-40,0 Mds €/an</div>
+      <div class="kpi-sub">Suppression C3S & CVAE (-11,5 Mds), IS abaissé à 20% (-14,5 Mds), CFE & Dutreil (-14 Mds)</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-title">Priorités Régaliennes & Familles</div>
+      <div class="kpi-val">+15 Mds / -15 Mds</div>
+      <div class="kpi-sub">+15 Mds €/an Régalien (Prisons, Armées, Profs +20%) & -15 Mds €/an Familles/Successions</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-title">Pilier 3 (20%) : Désendettement</div>
+      <div class="kpi-val">+40,0 Mds €/an</div>
+      <div class="kpi-sub">Déficit ramené de -146 Mds € (5,1% PIB) à -106 Mds € (~2,8% du PIB avec croissance)</div>
+    </div>
+  </div>
+
+  <div class="charts-grid">
+
+    <!-- GRAPHIQUE 1 : LE PROGRAMME DE DAVID LISNARD PAR FAMILLE -->
+    <div class="chart-box">
+      <h2>1. Le Programme de David Lisnard par Famille (An 1 vs An 5)</h2>
+      <p class="desc">En vert : les 4 familles d'économies (+205 Mds €/an). En bleu/orange : les 3 familles de baisses d'impôts (-175 Mds €/an) et le réinvestissement régalien (-15 Mds €/an).</p>
+      <div class="canvas-holder">
+        <canvas id="chartProgrammeFamilles"></canvas>
+      </div>
+    </div>
+
+    <!-- GRAPHIQUE 2 : LA RÈGLE D'OR 60 / 20 / 20 -->
+    <div class="chart-box">
+      <h2>2. La « Règle d'Or 60 / 20 / 20 » de Nouvelle Énergie (200 Mds €)</h2>
+      <p class="desc">Comment chaque euro d'économie structurelle nette réalisée sur la bureaucratie et le social est réparti entre les actifs, les entreprises et le désendettement.</p>
+      <div class="canvas-holder">
+        <canvas id="chartRegleOr"></canvas>
+      </div>
+    </div>
+
+    <!-- GRAPHIQUE 3 : COMPARATIF GLOBAL BUDGET ACTUEL VS BUDGET LISNARD -->
+    <div class="chart-box">
+      <h2>3. Comparatif Global : Budget Actuel vs Budget Prévu par David Lisnard</h2>
+      <p class="desc">Comparaison des Dépenses publiques, des Recettes publiques et du Déficit (France entière APU et Budget Général de l'État seul, en Mds €).</p>
+      <div class="canvas-holder">
+        <canvas id="chartMacroComp"></canvas>
+      </div>
+    </div>
+
+    <!-- GRAPHIQUE 4 : TRAJECTOIRE SUR 5 ANS (2027 -> 2032) -->
+    <div class="chart-box">
+      <h2>4. Trajectoire Quinquennale : Dépenses vs Recettes (2026 ➔ An 5)</h2>
+      <p class="desc">Convergence progressive des dépenses publiques (de 1 514 à 1 324 Mds €) et réduction du déficit sous la barre des 3 % du PIB.</p>
+      <div class="canvas-holder">
+        <canvas id="chartTrajectoire"></canvas>
+      </div>
+    </div>
+
+    <!-- GRAPHIQUE 5 : COMPARAISON DES 10 PÔLES DE DÉPENSES (OÙ VA L'ARGENT ?) -->
+    <div class="chart-box full-width">
+      <h2>5. Où va l'argent : Comparaison Pôle par Pôle (Budget Actuel vs Budget David Lisnard An 5)</h2>
+      <p class="desc">Tous les pôles administratifs et sociaux assistentiels diminuent, l'Éducation est sanctuarisée (bascule bureaucratie ➔ +20% salaire profs) et le Régalien (Défense, Police, Justice/Prisons) augmente (+8 Mds €/an).</p>
+      <div class="canvas-holder tall">
+        <canvas id="chartPolesDepenses"></canvas>
+      </div>
+    </div>
+
+    <!-- GRAPHIQUE 6 : COMPARAISON DES RECETTES PAR FAMILLE (D'OÙ VIENT L'ARGENT ?) -->
+    <div class="chart-box full-width">
+      <h2>6. D'où vient l'argent : Comparaison des Recettes & Impôts (Actuel vs David Lisnard An 5)</h2>
+      <p class="desc">Forte baisse des cotisations sur le travail (-120 Mds €), des impôts de production & IS (-40 Mds €) et des impôts familles/successions (-15 Mds €), sans aucune hausse de TVA (319 Mds € constants).</p>
+      <div class="canvas-holder">
+        <canvas id="chartRecettesComp"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TABLEAU RÉCAPITULATIF LIGNE À LIGNE -->
+  <div class="chart-box">
+    <h2>7. Tableau Comparatif Synthétique : Budget Actuel de la France vs Budget David Lisnard</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Pôle Budgétaire (Dépenses & Recettes)</th>
+          <th>Nature</th>
+          <th class="num">Budget Actuel</th>
+          <th class="num">Lisnard An 1</th>
+          <th class="num">Lisnard An 5</th>
+          <th class="num">Écart An 5</th>
+          <th>Mesures Clés du Programme Lisnard</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>1. Retraites (CNAV, Agirc-Arrco, SRE)</strong></td>
+          <td><span class="badge b-eco">Dépense Sociale</span></td>
+          <td class="num">382,0 Mds €</td>
+          <td class="num">369,5 Mds €</td>
+          <td class="num">349,0 Mds €</td>
+          <td class="num" style="color:#4ade80;">-33,0 Mds €</td>
+          <td>Âge légal à 65 ans (-17 Mds), fin régimes spéciaux, gel temporaire pensions > 2 000 € (-16 Mds) + Capitalisation</td>
+        </tr>
+        <tr>
+          <td><strong>2. Santé & Hôpital Public</strong></td>
+          <td><span class="badge b-eco">Dépense Sociale</span></td>
+          <td class="num">254,0 Mds €</td>
+          <td class="num">247,3 Mds €</td>
+          <td class="num">236,0 Mds €</td>
+          <td class="num" style="color:#4ade80;">-18,0 Mds €</td>
+          <td>Administratifs hôpital ramenés de 33% à 23% (-8 Mds), Carte Vitale biométrique (-7,5), AME➔AMU (-3,5), Santé rurale (+1)</td>
+        </tr>
+        <tr>
+          <td><strong>3. Solidarité, Famille, APL & RSA</strong></td>
+          <td><span class="badge b-eco">Dépense Sociale</span></td>
+          <td class="num">212,0 Mds €</td>
+          <td class="num">192,0 Mds €</td>
+          <td class="num">170,0 Mds €</td>
+          <td class="num" style="color:#4ade80;">-42,0 Mds €</td>
+          <td>Allocation Sociale Unique plafonnée à 75% SMIC & RSA 15-20h (-18), APL/CPF (-10), Délai 5 ans étrangers (-8), Fraude (-6)</td>
+        </tr>
+        <tr>
+          <td><strong>4. Collectivités Locales (APUL)</strong></td>
+          <td><span class="badge b-eco">Dépense Locale</span></td>
+          <td class="num">156,0 Mds €</td>
+          <td class="num">149,0 Mds €</td>
+          <td class="num">128,0 Mds €</td>
+          <td class="num" style="color:#4ade80;">-28,0 Mds €</td>
+          <td>Fin des doublons État/Régions/Départements (-16 Mds), choc de simplification normative (-12 Mds)</td>
+        </tr>
+        <tr>
+          <td><strong>5. Éducation Nationale & Recherche</strong></td>
+          <td><span class="badge b-reg">Priorité Régalienne</span></td>
+          <td class="num">115,0 Mds €</td>
+          <td class="num">115,2 Mds €</td>
+          <td class="num">115,0 Mds €</td>
+          <td class="num" style="color:#fbbf24;">0,0 Md €</td>
+          <td>Redéploiement interne : -4,5 Mds € sur la bureaucratie centrale/rectorats ➔ +4,5 Mds € pour augmenter les profs de +20%</td>
+        </tr>
+        <tr>
+          <td><strong>6. Régalien : Défense, Police, Justice</strong></td>
+          <td><span class="badge b-reg">Hausse Régalienne</span></td>
+          <td class="num">107,0 Mds €</td>
+          <td class="num">110,0 Mds €</td>
+          <td class="num">115,0 Mds €</td>
+          <td class="num" style="color:#fbbf24;">+8,0 Mds €</td>
+          <td>+30 000 places de prison & Justice (+3,5 Mds €), Réarmement Défense & modernisation Police/Gendarmerie (+4,5 Mds €)</td>
+        </tr>
+        <tr>
+          <td><strong>7. Économie, Écologie & 1 200 Agences</strong></td>
+          <td><span class="badge b-eco">Dépense État/ODAC</span></td>
+          <td class="num">105,0 Mds €</td>
+          <td class="num">88,2 Mds €</td>
+          <td class="num">66,0 Mds €</td>
+          <td class="num" style="color:#4ade80;">-39,0 Mds €</td>
+          <td>Suppression/fusion parmi les 1 200 agences (-28 Mds), fin subventions politisées (-10 Mds), France 2 privatisée (-2,5), Nucléaire (+1,5)</td>
+        </tr>
+        <tr>
+          <td><strong>8. Chômage & Insertion (Unédic)</strong></td>
+          <td><span class="badge b-eco">Dépense Sociale</span></td>
+          <td class="num">68,0 Mds €</td>
+          <td class="num">63,0 Mds €</td>
+          <td class="num">53,0 Mds €</td>
+          <td class="num" style="color:#4ade80;">-15,0 Mds €</td>
+          <td>Contrat de Travail Unique (CTU) et réforme de l'assurance chômage (-15 Mds € grâce au retour à l'emploi)</td>
+        </tr>
+        <tr>
+          <td><strong>9. Charge de la Dette (Intérêts)</strong></td>
+          <td><span class="badge b-eco">Dette Souveraine</span></td>
+          <td class="num">58,0 Mds €</td>
+          <td class="num">58,0 Mds €</td>
+          <td class="num">58,0 Mds €</td>
+          <td class="num">0,0 Md €</td>
+          <td>Stabilisation de la charge d'intérêts grâce au désendettement (-40 Mds €/an), évitant la dérive vers 78 Mds €</td>
+        </tr>
+        <tr>
+          <td><strong>10. Administration Générale État & UE</strong></td>
+          <td><span class="badge b-eco">Dépense État</span></td>
+          <td class="num">57,0 Mds €</td>
+          <td class="num">46,8 Mds €</td>
+          <td class="num">34,0 Mds €</td>
+          <td class="num" style="color:#4ade80;">-23,0 Mds €</td>
+          <td>Non-remplacement d'1 départ sur 2 admin (-13 Mds), 3 jours de carence (-2 Mds), train de vie & achats État (-8 Mds)</td>
+        </tr>
+        <tr style="background:#0f172a; font-weight:800;">
+          <td><strong>TOTAL DÉPENSES PUBLIQUES (APU)</strong></td>
+          <td><strong>52,7% ➔ 43,5% PIB</strong></td>
+          <td class="num"><strong>1 514,0 Mds €</strong></td>
+          <td class="num"><strong>1 439,0 Mds €</strong></td>
+          <td class="num"><strong>1 324,0 Mds €</strong></td>
+          <td class="num" style="color:#4ade80;"><strong>-190,0 Mds €</strong></td>
+          <td><strong>-205 Mds €/an d'économies brutes + 15 Mds €/an de réinvestissements régaliens</strong></td>
+        </tr>
+        <tr style="background:#172554; font-weight:800;">
+          <td><strong>TOTAL RECETTES PUBLIQUES (APU)</strong></td>
+          <td><strong>44,7% ➔ 40,0% PIB</strong></td>
+          <td class="num"><strong>1 368,0 Mds €</strong></td>
+          <td class="num"><strong>1 317,0 Mds €</strong></td>
+          <td class="num"><strong>1 218,0 Mds €</strong></td>
+          <td class="num" style="color:#38bdf8;"><strong>-150,0 Mds €</strong></td>
+          <td><strong>-175 Mds €/an de baisses d'impôts et cotisations + 25 Mds €/an de recettes liées à la croissance</strong></td>
+        </tr>
+        <tr style="background:#31102F; font-weight:800;">
+          <td><strong>DÉFICIT PUBLIC (SOLDE MAASTRICHT)</strong></td>
+          <td><strong>-5,1% ➔ -2,8% PIB</strong></td>
+          <td class="num"><strong>-146,0 Mds €</strong></td>
+          <td class="num"><strong>-122,0 Mds €</strong></td>
+          <td class="num"><strong>-106,0 Mds €</strong></td>
+          <td class="num" style="color:#4ade80;"><strong>+40,0 Mds €</strong></td>
+          <td><strong>Pilier 3 de la Règle d'Or : 40 Mds €/an dédiés au désendettement souverain</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    Chart.defaults.color = '#cbd5e1';
+    Chart.defaults.font.family = "'Segoe UI', system-ui, sans-serif";
+
+    // 1. Programme de David Lisnard par Famille
+    new Chart(document.getElementById('chartProgrammeFamilles'), {
+      type: 'bar',
+      data: {
+        labels: [
+          'F1. État & 1 200 Agences',
+          'F2. Social & Retraites',
+          'F3. Immigration & Fraude',
+          'F4. Normes & Collectivités',
+          'F5. Baisse Cotis. Salariales',
+          'F6. Baisse Impôts Prod. & IS',
+          'F7. Familles & Successions',
+          'F8. Réinvest. Régalien & Profs'
+        ],
+        datasets: [
+          {
+            label: 'Impact An 1 (Mds €)',
+            data: [27.5, 30.5, 11.0, 11.0, -38.0, -16.5, -4.5, -5.0],
+            backgroundColor: 'rgba(148, 163, 184, 0.7)',
+            borderRadius: 4
+          },
+          {
+            label: 'Impact An 5 Plein Régime (Mds €/an)',
+            data: [66.0, 76.0, 25.0, 38.0, -120.0, -40.0, -15.0, -15.0],
+            backgroundColor: [
+              '#22c55e', '#16a34a', '#15803d', '#4ade80',
+              '#38bdf8', '#818cf8', '#c084fc', '#f59e0b'
+            ],
+            borderRadius: 4
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            grid: { color: '#334155' },
+            title: { display: true, text: '+ Économies / - Baisses d\'impôts & Régalien (Mds €)' }
+          },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+
+    // 2. Règle d'Or 60 / 20 / 20
+    new Chart(document.getElementById('chartRegleOr'), {
+      type: 'doughnut',
+      data: {
+        labels: [
+          '60 % Pouvoir d\'Achat des Actifs : Baisse des cotisations salariales (120 Mds €/an)',
+          '20 % Compétitivité Entreprises : Fin C3S/CVAE & IS à 20% (40 Mds €/an)',
+          '20 % Désendettement de l\'État : Réduction du déficit (40 Mds €/an)'
+        ],
+        datasets: [{
+          data: [120.0, 40.0, 40.0],
+          backgroundColor: ['#38bdf8', '#a855f7', '#22c55e'],
+          borderColor: '#1e293b',
+          borderWidth: 3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 14, padding: 12 } }
+        }
+      }
+    });
+
+    // 3. Comparatif Global Macro
+    new Chart(document.getElementById('chartMacroComp'), {
+      type: 'bar',
+      data: {
+        labels: [
+          'Dépenses Publiques (APU)',
+          'Recettes Publiques (APU)',
+          'Déficit Public (Maastricht)',
+          'Budget Général État seul'
+        ],
+        datasets: [
+          {
+            label: 'Budget Actuel (Mds €)',
+            data: [1514.0, 1368.0, 146.0, 503.6],
+            backgroundColor: '#ef4444',
+            borderRadius: 5
+          },
+          {
+            label: 'Budget Lisnard An 1 (Mds €)',
+            data: [1439.0, 1317.0, 122.0, 469.6],
+            backgroundColor: '#f59e0b',
+            borderRadius: 5
+          },
+          {
+            label: 'Budget Lisnard An 5 (Mds €)',
+            data: [1324.0, 1218.0, 106.0, 423.4],
+            backgroundColor: '#22c55e',
+            borderRadius: 5
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { grid: { color: '#334155' }, title: { display: true, text: 'Milliards d\'Euros (Mds €)' } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+
+    // 4. Trajectoire Quinquennale
+    new Chart(document.getElementById('chartTrajectoire'), {
+      type: 'line',
+      data: {
+        labels: ['Actuel (2026)', 'An 1 (2027/28)', 'An 2 (2029)', 'An 3 (2030)', 'An 4 (2031)', 'An 5 (2032)'],
+        datasets: [
+          {
+            label: 'Dépenses Publiques Totales (Mds €)',
+            data: [1514.0, 1439.0, 1405.0, 1375.0, 1348.0, 1324.0],
+            borderColor: '#ef4444',
+            backgroundColor: 'rgba(239, 68, 68, 0.15)',
+            tension: 0.3,
+            fill: true,
+            borderWidth: 3
+          },
+          {
+            label: 'Recettes Publiques Totales après baisses d\'impôts (Mds €)',
+            data: [1368.0, 1317.0, 1290.0, 1265.0, 1241.0, 1218.0],
+            borderColor: '#38bdf8',
+            backgroundColor: 'rgba(56, 189, 248, 0.1)',
+            tension: 0.3,
+            fill: true,
+            borderWidth: 3
+          },
+          {
+            label: 'Déficit Public Maastricht (Mds €)',
+            data: [146.0, 122.0, 115.0, 110.0, 107.0, 106.0],
+            borderColor: '#22c55e',
+            borderDash: [6, 4],
+            tension: 0.3,
+            borderWidth: 3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { grid: { color: '#334155' }, title: { display: true, text: 'Mds €' } }
+        }
+      }
+    });
+
+    // 5. Comparaison Pôle par Pôle (Dépenses)
+    new Chart(document.getElementById('chartPolesDepenses'), {
+      type: 'bar',
+      data: {
+        labels: [
+          '1. Retraites (382 ➔ 349)',
+          '2. Santé & Hôpital (254 ➔ 236)',
+          '3. Solidarité, Famille, APL, RSA (212 ➔ 170)',
+          '4. Collectivités Locales (156 ➔ 128)',
+          '5. Éducation & Recherche (115 ➔ 115)',
+          '6. RÉGALIEN : Défense, Police, Justice (107 ➔ 115)',
+          '7. Économie, Écologie & 1 200 Agences (105 ➔ 66)',
+          '8. Chômage & Insertion (68 ➔ 53)',
+          '9. Charge de la Dette (58 ➔ 58)',
+          '10. Admin. Générale État & UE (57 ➔ 34)'
+        ],
+        datasets: [
+          {
+            label: 'Budget Actuel de la France (1 514 Mds €)',
+            data: [382.0, 254.0, 212.0, 156.0, 115.0, 107.0, 105.0, 68.0, 58.0, 57.0],
+            backgroundColor: '#64748b',
+            borderRadius: 4
+          },
+          {
+            label: 'Budget David Lisnard An 5 (1 324 Mds €)',
+            data: [349.0, 236.0, 170.0, 128.0, 115.0, 115.0, 66.0, 53.0, 58.0, 34.0],
+            backgroundColor: [
+              '#38bdf8', '#38bdf8', '#38bdf8', '#38bdf8',
+              '#fbbf24', '#22c55e', '#38bdf8', '#38bdf8',
+              '#94a3b8', '#38bdf8'
+            ],
+            borderRadius: 4
+          }
+        ]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { grid: { color: '#334155' }, title: { display: true, text: 'Milliards d\'Euros (Mds €)' } },
+          y: { grid: { display: false } }
+        }
+      }
+    });
+
+    // 6. Comparaison des Recettes par Famille
+    new Chart(document.getElementById('chartRecettesComp'), {
+      type: 'bar',
+      data: {
+        labels: [
+          '1. Cotisations Sociales & CSG Travail (-120 Mds €)',
+          '2. TVA & Taxes Consommation (0 hausse)',
+          '3. IS & Impôts de Production (-40 Mds €)',
+          '4. Impôt sur le Revenu & Épargne (-9,5 Mds €)',
+          '5. Patrimoine, Foncier & Successions (-5,5 Mds €)',
+          '6. Non-Fiscal + Retour Croissance (+25 Mds €)'
+        ],
+        datasets: [
+          {
+            label: 'Recettes Actuelles (1 368 Mds €)',
+            data: [678.0, 319.0, 137.0, 95.0, 92.0, 47.0],
+            backgroundColor: '#64748b',
+            borderRadius: 5
+          },
+          {
+            label: 'Recettes Budget Lisnard An 5 (1 218 Mds €)',
+            data: [558.0, 319.0, 97.0, 85.5, 86.5, 72.0],
+            backgroundColor: '#38bdf8',
+            borderRadius: 5
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { grid: { color: '#334155' }, title: { display: true, text: 'Milliards d\'Euros (Mds €)' } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  </script>
+</body>
+</html>

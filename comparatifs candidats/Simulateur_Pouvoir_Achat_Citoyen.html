@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulateur Pouvoir d'Achat 2027 : Quel Impact sur Votre Portefeuille ?</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-body: #0a0e17;
+            --bg-card: #131b2e;
+            --bg-card-hover: #1b2640;
+            --border-color: #233152;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-rose: #f43f5e;
+            --accent-amber: #f59e0b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            padding: 24px;
+            line-height: 1.5;
+        }
+        .header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #047857 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+        .header h1 { font-size: 28px; font-weight: 800; color: #fff; margin-bottom: 8px; }
+        .header p { font-size: 14px; color: #cbd5e1; max-width: 900px; margin: 0 auto; }
+        
+        .main-layout {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 24px;
+            margin-bottom: 30px;
+        }
+        @media (max-width: 1024px) {
+            .main-layout { grid-template-columns: 1fr; }
+        }
+        
+        /* Form Box */
+        .form-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 24px;
+            height: fit-content;
+        }
+        .form-card h2 {
+            font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 18px;
+            border-left: 4px solid var(--accent-green); padding-left: 10px;
+        }
+        .form-group { margin-bottom: 18px; }
+        .form-group label {
+            display: block; font-size: 12px; font-weight: 700; color: #cbd5e1;
+            text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;
+        }
+        .input-val {
+            width: 100%;
+            background: #1e293b;
+            border: 1px solid var(--border-color);
+            color: #fff;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .range-slider { width: 100%; margin-top: 6px; }
+        .slider-disp { font-size: 16px; font-weight: 800; color: var(--accent-green); margin-top: 4px; }
+        
+        .presets-row {
+            display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;
+        }
+        .preset-btn {
+            background: rgba(255,255,255,0.06); border: 1px solid var(--border-color);
+            color: var(--text-muted); font-size: 11px; font-weight: 600; padding: 4px 8px;
+            border-radius: 6px; cursor: pointer; transition: all 0.2s;
+        }
+        .preset-btn:hover { background: var(--accent-blue); color: #fff; }
+        
+        /* Results Section */
+        .results-container {
+            display: flex; flex-direction: column; gap: 24px;
+        }
+        .chart-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 24px;
+        }
+        .chart-box h3 {
+            font-size: 16px; font-weight: 700; color: #e2e8f0; margin-bottom: 14px;
+            border-left: 4px solid var(--accent-blue); padding-left: 10px;
+        }
+        .canvas-holder { position: relative; height: 500px; width: 100%; }
+        
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+        .cand-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 18px;
+            transition: all 0.2s ease;
+        }
+        .cand-card:hover { transform: translateY(-3px); border-color: var(--accent-blue); }
+        .cand-head {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;
+        }
+        .cand-name { font-size: 16px; font-weight: 800; color: #fff; }
+        .cand-party { font-size: 11px; color: var(--text-muted); }
+        
+        .net-impact {
+            font-size: 24px; font-weight: 900; margin: 8px 0;
+        }
+        .net-impact.positive { color: var(--accent-green); }
+        .net-impact.negative { color: var(--accent-rose); }
+        
+        .impact-breakdown {
+            font-size: 12px; color: #cbd5e1; display: flex; flex-direction: column; gap: 4px;
+            margin: 12px 0; background: rgba(255,255,255,0.02); padding: 8px; border-radius: 6px;
+        }
+        .desc-text { font-size: 11.5px; color: var(--text-muted); line-height: 1.4; }
+        .btn-link {
+            display: inline-block; margin-top: 10px; color: #60a5fa; text-decoration: none;
+            font-size: 11px; font-weight: 700;
+        }
+        .btn-link:hover { text-decoration: underline; }
+        
+        .footer { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 36px; padding: 20px 0; border-top: 1px solid var(--border-color); }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>💶 Simulateur Pouvoir d'Achat 2027 : Quel Impact sur Votre Portefeuille ?</h1>
+        <p>Ajustez votre salaire, votre composition familiale, votre véhicule et votre logement pour calculer en direct votre <strong>gain ou perte nette mensuelle (€/mois et €/an)</strong> sous la présidence de chaque candidat.</p>
+    </div>
+
+    <div class="main-layout">
+        <!-- FORMULAIRE DE PROFIL -->
+        <div class="form-card">
+            <h2>⚙️ Votre Profil Personnel</h2>
+
+            <div class="form-group">
+                <label>Salaire Brut Mensuel (€)</label>
+                <input type="range" id="inputSalaire" min="1400" max="10000" step="100" value="2500" class="range-slider" oninput="updateSimu()">
+                <div class="slider-disp" id="dispSalaire">2 500 € brut (~1 950 € net)</div>
+                <div class="presets-row">
+                    <button class="preset-btn" onclick="setSalary(1802)">SMIC (1 802 €)</button>
+                    <button class="preset-btn" onclick="setSalary(2100)">Médian (2 100 €)</button>
+                    <button class="preset-btn" onclick="setSalary(3500)">Cadre (3 500 €)</button>
+                    <button class="preset-btn" onclick="setSalary(6500)">Aisé (6 500 €)</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Situation Familiale & Enfants</label>
+                <select id="selFamille" class="input-val" onchange="updateSimu()">
+                    <option value="celib_0">Célibataire sans enfant (1 part)</option>
+                    <option value="couple_0">Couple sans enfant (2 parts)</option>
+                    <option value="couple_1">Couple avec 1 enfant (2,5 parts)</option>
+                    <option value="couple_2" selected>Couple avec 2 enfants (3 parts)</option>
+                    <option value="couple_3">Famille nombreuse 3+ enfants (4 parts)</option>
+                    <option value="mono_1">Famille monoparentale (1,5 part)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Âge de l'assuré principal</label>
+                <select id="selAge" class="input-val" onchange="updateSimu()">
+                    <option value="moins_30">Moins de 30 ans (Jeune actif)</option>
+                    <option value="30_55" selected>Entre 30 et 55 ans</option>
+                    <option value="plus_55">Plus de 55 ans / Senior</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Kilométrage annuel en voiture</label>
+                <select id="selCarbu" class="input-val" onchange="updateSimu()">
+                    <option value="0">0 km / Transports en commun</option>
+                    <option value="8000">8 000 km / an (Usage modéré)</option>
+                    <option value="15000" selected>15 000 km / an (Moyenne nationale)</option>
+                    <option value="25000">25 000 km / an (Gros rouleur rural)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Patrimoine Immobilier & Financier</label>
+                <select id="selPatrimoine" class="input-val" onchange="updateSimu()">
+                    <option value="faible" selected>Patrimoine < 300 000 € (Résidence simple)</option>
+                    <option value="moyen">300 000 € à 1,3 M€ (Classe moyenne sup)</option>
+                    <option value="assujetti_ifi">1,3 M€ à 3 M€ (Actuellement assujetti IFI)</option>
+                    <option value="tres_eleve">Supérieur à 3 M€ (Grand patrimoine)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- RÉSULTATS COMPARATIFS -->
+        <div class="results-container">
+            <div class="chart-box">
+                <h3>Classement du Gain Net Annuel pour Votre Profil (€ / an)</h3>
+                <div class="canvas-holder">
+                    <canvas id="impactChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-box">
+                <h3>Détail de l'Impact Fiche de Paie & Budget par Candidat</h3>
+                <div class="cards-grid" id="cardsGrid">
+                    <!-- Injected via JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        Grand Observatoire Présidentiel 2027 — Simulateur Micro-Économique du Pouvoir d'Achat
+    </div>
+
+    <script>
+        const cands = [{"id": "lisnard", "name": "David Lisnard", "parti": "Nouvelle Énergie", "famille": "Droite libérale", "color": "#0ea5e9", "url": "../candidats/David%20Lisnard/Visualisation_Programme_et_Comparatif_Budget_David_Lisnard.html", "smic_bonus": 0, "cotis_cut_pct": 2.5, "ir_cut_pct": 10.0, "tva_cut_carbu": 0.0, "ifi_cut": true, "succession_cut": true, "aides_cap": true, "heures_sup_gain": 600, "resume": "Baisse massive de l'IR (-10%), défiscalisation totale des heures sup, suppression de l'IFI et droits de succession, baisse des charges salariales (+2.5% net), mais plafonnement des aides sociales à 70% du SMIC."}, {"id": "retailleau", "name": "Bruno Retailleau", "parti": "Les Républicains", "famille": "Droite républicaine", "color": "#0284c7", "url": "../candidats/Bruno%20Retailleau/Visualisation_Programme_et_Comparatif_Budget_Bruno_Retailleau.html", "smic_bonus": 0, "cotis_cut_pct": 2.0, "ir_cut_pct": 7.0, "tva_cut_carbu": 0.0, "ifi_cut": true, "succession_cut": true, "aides_cap": true, "heures_sup_gain": 500, "resume": "Quotient familial rehaussé à 3 000 €/part, défiscalisation heures sup, suppression succession jusqu'à 300 000 €, plafonnement des aides à 70% SMIC."}, {"id": "wauquiez", "name": "Laurent Wauquiez", "parti": "La Droite Républicaine", "famille": "Droite républicaine", "color": "#2563eb", "url": "../candidats/Laurent%20Wauquiez/Visualisation_Programme_et_Comparatif_Budget_Laurent_Wauquiez.html", "smic_bonus": 0, "cotis_cut_pct": 2.0, "ir_cut_pct": 6.0, "tva_cut_carbu": 0.0, "ifi_cut": true, "succession_cut": true, "aides_cap": true, "heures_sup_gain": 500, "resume": "Défiscalisation heures sup, prime au travail, plafonnement des aides, transmission d'entreprise familiale exonérée."}, {"id": "philippe", "name": "Édouard Philippe", "parti": "Horizons", "famille": "Centre-droit", "color": "#3b82f6", "url": "../candidats/Édouard%20Philippe/Visualisation_Programme_et_Comparatif_Budget_Édouard_Philippe.html", "smic_bonus": 0, "cotis_cut_pct": 1.0, "ir_cut_pct": 4.0, "tva_cut_carbu": 0.0, "ifi_cut": false, "succession_cut": false, "aides_cap": false, "heures_sup_gain": 250, "resume": "Stabilité fiscale globale, allègement modéré pour les classes moyennes actives, participation en entreprise facilitée."}, {"id": "attal", "name": "Gabriel Attal", "parti": "Renaissance", "famille": "Centre", "color": "#6366f1", "url": "../candidats/Gabriel%20Attal/Visualisation_Programme_et_Comparatif_Budget_Gabriel_Attal.html", "smic_bonus": 0, "cotis_cut_pct": 1.2, "ir_cut_pct": 5.0, "tva_cut_carbu": 0.0, "ifi_cut": false, "succession_cut": false, "aides_cap": false, "heures_sup_gain": 300, "resume": "Désmicardisation, baisse de 2 Mds € d'impôt sur les classes moyennes, semaine en 4 jours, prime de partage de la valeur pérennisée."}, {"id": "bayrou", "name": "François Bayrou", "parti": "MoDem", "famille": "Centre", "color": "#f97316", "url": "../candidats/François%20Bayrou/Visualisation_Programme_et_Comparatif_Budget_François_Bayrou.html", "smic_bonus": 0, "cotis_cut_pct": 0.8, "ir_cut_pct": 3.0, "tva_cut_carbu": 0.0, "ifi_cut": false, "succession_cut": false, "aides_cap": false, "heures_sup_gain": 200, "resume": "Intéressement obligatoire, stabilité fiscale, soutien au quotient familial pour les familles de la classe moyenne."}, {"id": "bardella", "name": "Jordan Bardella", "parti": "Rassemblement National", "famille": "Droite nationale", "color": "#1e3a8a", "url": "../candidats/Jordan%20Bardella/Visualisation_Programme_et_Comparatif_Budget_Jordan_Bardella.html", "smic_bonus": 0, "cotis_cut_pct": 3.5, "ir_cut_pct": 5.0, "tva_cut_carbu": 14.5, "ifi_cut": false, "succession_cut": true, "aides_cap": false, "heures_sup_gain": 400, "young_ir_zero": true, "resume": "TVA à 5,5% sur carburants, gaz et électricité, exonération d'IR pour les moins de 30 ans, hausse de salaires de 10% sans charges patronales."}, {"id": "lepen", "name": "Marine Le Pen", "parti": "Rassemblement National", "famille": "Droite nationale", "color": "#1e3a8a", "url": "../candidats/Marine%20Le%20Pen/Visualisation_Programme_et_Comparatif_Budget_Marine_Le_Pen.html", "smic_bonus": 0, "cotis_cut_pct": 3.5, "ir_cut_pct": 5.0, "tva_cut_carbu": 14.5, "ifi_cut": false, "succession_cut": true, "aides_cap": false, "heures_sup_gain": 400, "young_ir_zero": true, "resume": "TVA à 5,5% sur l'énergie (-14,5 points), exonération d'IR pour les moins de 30 ans, part fiscale pleine dès le 2e enfant, hausse des salaires via exonération."}, {"id": "zemmour", "name": "Éric Zemmour", "parti": "Reconquête !", "famille": "Droite identitaire", "color": "#1e293b", "url": "../candidats/Éric%20Zemmour/Visualisation_Programme_et_Comparatif_Budget_Éric_Zemmour.html", "smic_bonus": 0, "cotis_cut_pct": 3.0, "ir_cut_pct": 5.0, "tva_cut_carbu": 5.0, "ifi_cut": true, "succession_cut": true, "aides_cap": true, "heures_sup_gain": 400, "resume": "Baisse des charges salariales pour augmenter le net (gain 1 500 €/an sur salaires modestes), 0 succession jusqu'à 1 M€, suppression IFI, réserve des aides aux Français."}, {"id": "cazeneuve", "name": "Bernard Cazeneuve", "parti": "La Convention", "famille": "Gauche républicaine", "color": "#1e3a8a", "url": "../candidats/Bernard%20Cazeneuve/Visualisation_Programme_et_Comparatif_Budget_Bernard_Cazeneuve.html", "smic_bonus": 50, "cotis_cut_pct": 0.5, "ir_cut_pct": 0.0, "tva_cut_carbu": 0.0, "ifi_cut": false, "succession_cut": false, "aides_cap": false, "heures_sup_gain": 0, "resume": "Conférence salariale obligatoire, justice fiscale ciblée (tranches supérieures réajustées), prime transport étendue."}, {"id": "glucksmann", "name": "Raphaël Glucksmann", "parti": "Place Publique", "famille": "Centre-gauche", "color": "#0284c7", "url": "../candidats/Raphaël%20Glucksmann/Visualisation_Programme_et_Comparatif_Budget_Raphaël_Glucksmann.html", "smic_bonus": 50, "cotis_cut_pct": 0.5, "ir_cut_pct": -2.0, "tva_cut_carbu": 0.0, "ifi_cut": false, "succession_cut": false, "aides_cap": false, "heures_sup_gain": 0, "cheque_vert": 200, "resume": "ISF vert européen, barème progressif renforcé pour hauts patrimoines, chèque transition écologique pour ménages modestes."}, {"id": "tondelier", "name": "Marine Tondelier", "parti": "Les Écologistes", "famille": "Écologie politique", "color": "#16a34a", "url": "../candidats/Marine%20Tondelier/Visualisation_Programme_et_Comparatif_Budget_Marine_Tondelier.html", "smic_bonus": 100, "cotis_cut_pct": 0.0, "ir_cut_pct": -5.0, "tva_cut_carbu": -5.0, "ifi_cut": false, "succession_cut": false, "aides_cap": false, "heures_sup_gain": 0, "cheque_vert": 400, "train_gratuit": 300, "resume": "Train gratuit pour les jeunes, chèque climat de 400 €/an, SMIC revalorisé (+100 €), ISF climatique (+15 Mds) mais surtaxation des énergies fossiles."}, {"id": "ruffin", "name": "François Ruffin", "parti": "Picardie Debout !", "famille": "Gauche populaire", "color": "#ef4444", "url": "../candidats/François%20Ruffin/Visualisation_Programme_et_Comparatif_Budget_François_Ruffin.html", "smic_bonus": 200, "cotis_cut_pct": 0.0, "ir_cut_pct": -5.0, "tva_cut_carbu": 0.0, "ifi_cut": false, "succession_cut": false, "aides_cap": false, "heures_sup_gain": 0, "reval_soin": 150, "resume": "SMIC net à 1 600 € (+174 € net direct), revalorisation des métiers du soin et du lien, impôt à 75% sur les très hauts revenus (>250k€)."}, {"id": "melenchon", "name": "Jean-Luc Mélenchon", "parti": "La France Insoumise", "famille": "Gauche de rupture", "color": "#b91c1c", "url": "../candidats/Jean-Luc%20Mélenchon/Visualisation_Programme_et_Comparatif_Budget_Jean-Luc_Mélenchon.html", "smic_bonus": 200, "cotis_cut_pct": 0.0, "ir_cut_pct": -10.0, "tva_cut_carbu": 0.0, "ifi_cut": false, "succession_cut": false, "aides_cap": false, "heures_sup_gain": 0, "blocage_prix": 300, "resume": "SMIC net à 1 600 €, blocage des prix essentiels et de l'énergie, gratuité des premiers m3 d'eau, barème IR à 14 tranches (tranche 90%), plafonnement des héritages à 12 M€."}, {"id": "roussel", "name": "Fabien Roussel", "parti": "PCF", "famille": "Gauche républicaine", "color": "#dc2626", "url": "../candidats/Fabien%20Roussel/Visualisation_Programme_et_Comparatif_Budget_Fabien_Roussel.html", "smic_bonus": 374, "cotis_cut_pct": 0.0, "ir_cut_pct": -8.0, "tva_cut_carbu": 14.5, "ifi_cut": false, "succession_cut": false, "aides_cap": false, "heures_sup_gain": 0, "salaire_etudiant": 850, "resume": "SMIC net à 1 800 € (+374 € net direct), TVA à 0% sur gaz, électricité et alimentation, allocation autonomie jeunesse dès 18 ans (850 €)."}, {"id": "poutou", "name": "Philippe Poutou", "parti": "NPA", "famille": "Extrême gauche", "color": "#991b1b", "url": "../candidats/Philippe%20Poutou/Visualisation_Programme_et_Comparatif_Budget_Philippe_Poutou.html", "smic_bonus": 574, "cotis_cut_pct": 0.0, "ir_cut_pct": -25.0, "tva_cut_carbu": 20.0, "ifi_cut": false, "succession_cut": false, "aides_cap": false, "heures_sup_gain": 0, "resume": "SMIC net à 2 000 € net pour tous (+574 € direct), semaine de 30 heures sans perte de salaire, suppression intégrale de la TVA, confiscation des profits boursiers."}];
+        let impactChart = null;
+
+        function setSalary(val) {
+            document.getElementById('inputSalaire').value = val;
+            updateSimu();
+        }
+
+        function calculateImpact(c, brut, famille, age, km, pat) {
+            // Base net salary estimate (~78% of gross)
+            let baseNet = brut * 0.78;
+            let netYear = baseNet * 12;
+            let isSmic = (brut <= 1900);
+
+            let gainSalaireNet = 0;
+            let gainFiscalIR = 0;
+            let gainCarbu = 0;
+            let gainPatrimoine = 0;
+            let gainAides = 0;
+
+            // 1. SMIC Bonus
+            if (isSmic && c.smic_bonus > 0) {
+                gainSalaireNet += c.smic_bonus * 12;
+            }
+
+            // 2. Cotisations cut on net salary
+            if (c.cotis_cut_pct > 0) {
+                gainSalaireNet += (brut * (c.cotis_cut_pct / 100)) * 12;
+            }
+
+            // 3. Heures sup
+            if (c.heures_sup_gain > 0 && !isSmic) {
+                gainSalaireNet += c.heures_sup_gain;
+            }
+
+            // 4. IR impact
+            // Approximation of annual IR based on gross & parts
+            let parts = 1;
+            if (famille === 'couple_0') parts = 2;
+            if (famille === 'couple_1') parts = 2.5;
+            if (famille === 'couple_2') parts = 3;
+            if (famille === 'couple_3') parts = 4;
+            if (famille === 'mono_1') parts = 1.5;
+
+            let quotient = (brut * 12 * 0.90) / parts;
+            let baseIR = 0;
+            if (quotient > 28797) {
+                baseIR = (quotient - 28797) * 0.30 * parts;
+            } else if (quotient > 11294) {
+                baseIR = (quotient - 11294) * 0.11 * parts;
+            }
+
+            // RN exonération -30 ans
+            if (c.young_ir_zero && age === 'moins_30') {
+                gainFiscalIR += baseIR;
+            } else if (c.ir_cut_pct > 0) {
+                gainFiscalIR += baseIR * (c.ir_cut_pct / 100);
+            } else if (c.ir_cut_pct < 0 && quotient > 35000) {
+                // Tax hike on upper brackets
+                gainFiscalIR += baseIR * (c.ir_cut_pct / 100);
+            }
+
+            // Quotient familial boost (Retailleau, Wauquiez, Lisnard)
+            if (parts > 2 && (c.id === 'retailleau' || c.id === 'wauquiez' || c.id === 'lisnard')) {
+                gainFiscalIR += 750 * (parts - 2);
+            }
+
+            // 5. Carburant & Énergie (TVA cut)
+            if (km > 0 && c.tva_cut_carbu > 0) {
+                // ~7L/100km, 1.85€/L, ~1.85 * 0.145 saving
+                let liters = (km / 100) * 7.0;
+                let savingPerLiter = 1.85 * (c.tva_cut_carbu / 100);
+                gainCarbu += liters * savingPerLiter;
+                // Also domestic energy saving (gaz/élec ~200€)
+                gainCarbu += 180;
+            } else if (c.cheque_vert) {
+                gainCarbu += c.cheque_vert;
+            }
+
+            // 6. Patrimoine
+            if (pat === 'assujetti_ifi' || pat === 'tres_eleve') {
+                if (c.ifi_cut) {
+                    gainPatrimoine += (pat === 'tres_eleve') ? 12000 : 3500;
+                }
+            }
+
+            // 7. Aides & divers
+            if (c.blocage_prix) gainAides += c.blocage_prix;
+            if (c.train_gratuit && age === 'moins_30') gainAides += c.train_gratuit;
+
+            let totalYear = Math.round(gainSalaireNet + gainFiscalIR + gainCarbu + gainPatrimoine + gainAides);
+            let totalMonth = Math.round(totalYear / 12);
+
+            return {
+                totalYear,
+                totalMonth,
+                gainSalaireNet: Math.round(gainSalaireNet),
+                gainFiscalIR: Math.round(gainFiscalIR),
+                gainCarbu: Math.round(gainCarbu),
+                gainPatrimoine: Math.round(gainPatrimoine),
+                gainAides: Math.round(gainAides)
+            };
+        }
+
+        function updateSimu() {
+            const brut = parseInt(document.getElementById('inputSalaire').value);
+            const disp = document.getElementById('dispSalaire');
+            const netEst = Math.round(brut * 0.78);
+            disp.innerText = `${brut.toLocaleString()} € brut (~${netEst.toLocaleString()} € net/mois)`;
+
+            const famille = document.getElementById('selFamille').value;
+            const age = document.getElementById('selAge').value;
+            const km = parseInt(document.getElementById('selCarbu').value);
+            const pat = document.getElementById('selPatrimoine').value;
+
+            // Calculate impact for all candidates
+            const computed = cands.map(c => {
+                const imp = calculateImpact(c, brut, famille, age, km, pat);
+                return { ...c, impact: imp };
+            });
+
+            // Sort by total annual gain descending
+            computed.sort((a, b) => b.impact.totalYear - a.impact.totalYear);
+
+            // Update Chart
+            const ctx = document.getElementById('impactChart').getContext('2d');
+            if (impactChart) impactChart.destroy();
+
+            impactChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: computed.map(c => c.name),
+                    datasets: [{
+                        label: 'Gain / Perte Net Annuel (€ / an)',
+                        data: computed.map(c => c.impact.totalYear),
+                        backgroundColor: computed.map(c => c.impact.totalYear >= 0 ? '#10b981' : '#f43f5e'),
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: '#94a3b8',
+                                callback: v => (v > 0 ? '+' : '') + v.toLocaleString() + ' €'
+                            },
+                            grid: { color: 'rgba(255,255,255,0.06)' }
+                        },
+                        y: { ticks: { color: '#cbd5e1', font: { size: 11 } }, grid: { display: false } }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#fff' } },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => `Impact Net : ${ctx.raw > 0 ? '+' : ''}${ctx.raw.toLocaleString()} € / an (~${Math.round(ctx.raw/12)} € / mois)`
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Update Cards Grid
+            const grid = document.getElementById('cardsGrid');
+            grid.innerHTML = "";
+
+            computed.forEach(c => {
+                const imp = c.impact;
+                const isPos = imp.totalYear >= 0;
+                const card = document.createElement('div');
+                card.className = "cand-card";
+                card.style.borderTop = `3px solid ${c.color}`;
+                card.innerHTML = `
+                    <div class="cand-head">
+                        <div>
+                            <div class="cand-name">${c.name}</div>
+                            <div class="cand-party">${c.parti} • ${c.famille}</div>
+                        </div>
+                    </div>
+
+                    <div class="net-impact ${isPos ? 'positive' : 'negative'}">
+                        ${isPos ? '+' : ''}${imp.totalYear.toLocaleString()} € <span style="font-size:12px; font-weight:normal; color:#94a3b8;">/ an</span>
+                    </div>
+                    <div style="font-size:12px; font-weight:bold; color:${isPos ? '#10b981' : '#f43f5e'}">
+                        Soit ${isPos ? '+' : ''}${imp.totalMonth} € / mois sur votre budget
+                    </div>
+
+                    <div class="impact-breakdown">
+                        <div>💶 <strong>Fiche de paie :</strong> ${imp.gainSalaireNet > 0 ? '+' : ''}${imp.gainSalaireNet} €/an</div>
+                        <div>🏠 <strong>Impôt sur le Revenu :</strong> ${imp.gainFiscalIR > 0 ? '+' : ''}${imp.gainFiscalIR} €/an</div>
+                        <div>⛽ <strong>Énergie & Carburant :</strong> ${imp.gainCarbu > 0 ? '+' : ''}${imp.gainCarbu} €/an</div>
+                        ${imp.gainPatrimoine !== 0 ? `<div>🏛️ <strong>Patrimoine / IFI :</strong> +${imp.gainPatrimoine} €/an</div>` : ''}
+                    </div>
+
+                    <div class="desc-text">${c.resume}</div>
+                    <a href="${c.url}" class="btn-link" target="_blank">Consulter le dossier chiffré de ${c.name} →</a>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Init
+        updateSimu();
+    </script>
+</body>
+</html>

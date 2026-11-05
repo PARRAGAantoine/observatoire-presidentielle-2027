@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boussole Électorale 2027 : Test d'Affinité Politique & Budgétaire</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-body: #0a0e17;
+            --bg-card: #131b2e;
+            --bg-card-hover: #1b2640;
+            --border-color: #233152;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-rose: #f43f5e;
+            --accent-amber: #f59e0b;
+            --accent-purple: #a855f7;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            padding: 24px;
+            line-height: 1.5;
+        }
+        .header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #4c1d95 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+        .header h1 { font-size: 28px; font-weight: 800; color: #fff; margin-bottom: 8px; }
+        .header p { font-size: 14px; color: #cbd5e1; max-width: 850px; margin: 0 auto; }
+        
+        .progress-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+        .progress-bar-bg {
+            flex: 1;
+            height: 10px;
+            background: #1e293b;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #10b981);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .progress-text { font-size: 13px; font-weight: 700; color: #cbd5e1; white-space: nowrap; }
+        
+        /* Question Card */
+        .question-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 30px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .q-category {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--accent-blue);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            background: rgba(59, 130, 246, 0.1);
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        .q-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 22px;
+            line-height: 1.4;
+        }
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .option-btn {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 16px 20px;
+            color: #e2e8f0;
+            font-size: 14px;
+            font-weight: 500;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .option-btn:hover {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: var(--accent-blue);
+            color: #fff;
+            transform: translateX(4px);
+        }
+        .option-btn.selected {
+            background: rgba(16, 185, 129, 0.18);
+            border-color: var(--accent-green);
+            color: #fff;
+            font-weight: 700;
+        }
+        .opt-letter {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #1e293b;
+            color: #94a3b8;
+            font-weight: 800;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+        .option-btn.selected .opt-letter {
+            background: var(--accent-green);
+            color: #fff;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 24px;
+        }
+        .btn-nav {
+            background: #1e293b;
+            color: #cbd5e1;
+            border: 1px solid var(--border-color);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-nav:hover:not(:disabled) { background: #334155; color: #fff; }
+        .btn-nav:disabled { opacity: 0.3; cursor: not-allowed; }
+        .btn-primary {
+            background: var(--accent-blue);
+            color: #fff;
+            border-color: var(--accent-blue);
+        }
+        .btn-primary:hover:not(:disabled) { background: #2563eb; }
+        
+        /* Results Section */
+        #resultsSection { display: none; }
+        
+        .podium-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+        .podium-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 14px;
+            padding: 24px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+        .podium-card.first {
+            border-color: #eab308;
+            background: linear-gradient(180deg, rgba(234, 179, 8, 0.08) 0%, var(--bg-card) 100%);
+            transform: scale(1.03);
+        }
+        .podium-card.second { border-color: #94a3b8; }
+        .podium-card.third { border-color: #d97706; }
+        
+        .medal-badge {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        .cand-name { font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+        .cand-party { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
+        .score-circle {
+            font-size: 36px;
+            font-weight: 900;
+            margin-bottom: 12px;
+            color: var(--accent-green);
+        }
+        .first .score-circle { color: #eab308; }
+        .score-lbl { font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; }
+        
+        .btn-see-dossier {
+            display: inline-block;
+            margin-top: 14px;
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+            border: 1px solid #3b82f6;
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+        .btn-see-dossier:hover { background: #3b82f6; color: #fff; }
+        
+        .chart-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .chart-box h3 {
+            font-size: 16px; font-weight: 700; color: #e2e8f0; margin-bottom: 16px;
+            border-left: 4px solid var(--accent-blue); padding-left: 10px;
+        }
+        .chart-holder { position: relative; height: 600px; width: 100%; }
+        
+        .restart-box { text-align: center; margin: 30px 0; }
+        .btn-restart {
+            background: #1e293b; color: #fff; border: 1px solid var(--border-color);
+            padding: 12px 28px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-restart:hover { background: var(--accent-rose); border-color: var(--accent-rose); }
+        
+        .footer { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 36px; padding: 20px 0; border-top: 1px solid var(--border-color); }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>🧭 Boussole Électorale 2027 : Test d'Affinité Politique & Budgétaire</h1>
+        <p>Répondez à 12 questions concrètes portant sur les retraites, les salaires, les impôts, l'énergie, l'immigration, la dette et les institutions pour découvrir instantanément les candidats les plus proches de vos convictions parmi les 32 personnalités analysées.</p>
+    </div>
+
+    <!-- QUIZ INTERFACE -->
+    <div id="quizSection">
+        <div class="progress-box">
+            <span class="progress-text" id="progressText">Question 1 sur 12</span>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progressBar"></div>
+            </div>
+            <button class="btn-nav" onclick="skipQuestion()" style="font-size: 11px; padding: 6px 12px;">Passer / Neutre</button>
+        </div>
+
+        <div class="question-card" id="questionCard">
+            <!-- Injected via JavaScript -->
+        </div>
+
+        <div class="nav-buttons">
+            <button class="btn-nav" id="btnPrev" onclick="prevQuestion()" disabled>← Précédent</button>
+            <button class="btn-nav btn-primary" id="btnNext" onclick="nextQuestion()" disabled>Suivant →</button>
+        </div>
+    </div>
+
+    <!-- RESULTS INTERFACE -->
+    <div id="resultsSection">
+        <div style="text-align: center; margin-bottom: 28px;">
+            <span style="font-size: 12px; font-weight: 800; color: var(--accent-green); text-transform: uppercase; letter-spacing: 1.5px;">Résultats de votre test</span>
+            <h2 style="font-size: 26px; font-weight: 900; color: #fff; margin-top: 4px;">Voici les candidats qui correspondent le mieux à vos réponses</h2>
+        </div>
+
+        <div class="podium-container" id="podiumContainer">
+            <!-- Injected via JS -->
+        </div>
+
+        <div class="chart-box">
+            <h3>Classement Complet d'Affinité (Les 32 Candidats de 0% à 100%)</h3>
+            <div class="chart-holder">
+                <canvas id="affinityChart"></canvas>
+            </div>
+        </div>
+
+        <div class="restart-box">
+            <button class="btn-restart" onclick="restartQuiz()">🔄 Recommencer le test avec d'autres choix</button>
+        </div>
+    </div>
+
+    <div class="footer">
+        Grand Observatoire Présidentiel 2027 — Algorithme de Match & Boussole Électorale
+    </div>
+
+    <script>
+        const questions = [{"id": "q1", "category": "Retraites & Pensions", "question": "À quel âge selon vous les Français devraient-ils pouvoir partir à la retraite à taux plein ?", "options": [{"id": "q1_a", "text": "55 à 60 ans pour tous avec 37,5 à 40 annuités (financé par les hauts revenus et le capital)", "weights": {"Philippe Poutou": 10, "Nathalie Arthaud": 10, "Jean-Luc Mélenchon": 10, "Fabien Roussel": 10, "François Ruffin": 9, "Clémentine Autain": 9, "Florian Philippot": 8, "François Asselineau": 8, "Jean Lassalle": 8}}, {"id": "q1_b", "text": "60 à 62 ans pour les carrières longues et pénibles, et assouplissement de la réforme actuelle", "weights": {"Marine Le Pen": 9, "Jordan Bardella": 9, "Nicolas Dupont-Aignan": 9, "Marine Tondelier": 9, "Hélène Thouy": 8, "Jean-Marc Governatori": 8, "Carole Delga": 8}}, {"id": "q1_c", "text": "64 ans avec négociation sur la pénibilité et l'emploi des seniors (statu quo maîtrisé)", "weights": {"Gabriel Attal": 10, "Yaël Braun-Pivet": 10, "Gérald Darmanin": 10, "François Bayrou": 10, "Michel Barnier": 10, "Bernard Cazeneuve": 9, "François Hollande": 9, "Raphaël Glucksmann": 9, "Dominique de Villepin": 9}}, {"id": "q1_d", "text": "65 à 67 ans pour sauvegarder l'équilibre des comptes publics et désendetter le pays", "weights": {"David Lisnard": 10, "Bruno Retailleau": 10, "Laurent Wauquiez": 10, "Édouard Philippe": 10, "Marion Maréchal": 10, "Éric Zemmour": 9, "Xavier Bertrand": 9}}]}, {"id": "q2", "category": "Salaires & Pouvoir d'Achat", "question": "Quelle est la meilleure mesure pour augmenter le pouvoir d'achat des travailleurs ?", "options": [{"id": "q2_a", "text": "Augmentation directe du SMIC par la loi (1 600 € à 2 000 € net) et blocage des prix des produits de première nécessité", "weights": {"Philippe Poutou": 10, "Nathalie Arthaud": 10, "Jean-Luc Mélenchon": 10, "Fabien Roussel": 10, "François Ruffin": 10, "Clémentine Autain": 9, "Marine Tondelier": 8}}, {"id": "q2_b", "text": "Augmenter les salaires nets de 10% en exonérant les hausses de cotisations patronales", "weights": {"Jordan Bardella": 10, "Marine Le Pen": 10, "Nicolas Dupont-Aignan": 9, "Florian Philippot": 9, "François Asselineau": 8, "Jean Lassalle": 8}}, {"id": "q2_c", "text": "Partage de la valeur obligatoire (intéressement, participation) et conférence salariale tripartite", "weights": {"François Bayrou": 10, "Gabriel Attal": 9, "Yaël Braun-Pivet": 9, "Dominique de Villepin": 10, "Bernard Cazeneuve": 9, "Carole Delga": 9, "François Hollande": 9, "Raphaël Glucksmann": 9, "Jean-Marc Governatori": 8}}, {"id": "q2_d", "text": "Défiscalisation intégrale des heures supplémentaires, fin des 35h par accord d'entreprise et baisse des charges", "weights": {"David Lisnard": 10, "Bruno Retailleau": 10, "Laurent Wauquiez": 10, "Marion Maréchal": 10, "Éric Zemmour": 9, "Gérald Darmanin": 9, "Xavier Bertrand": 9, "Édouard Philippe": 9}}]}, {"id": "q3", "category": "Fiscalité des Ménages & Patrimoine", "question": "Quelle réforme fiscale des ménages correspond le mieux à vos priorités ?", "options": [{"id": "q3_a", "text": "Rétablir un ISF élargi au capital financier, créer une tranche d'IR à 75-90% et plafonner les héritages", "weights": {"Jean-Luc Mélenchon": 10, "Philippe Poutou": 10, "Nathalie Arthaud": 10, "François Ruffin": 10, "Fabien Roussel": 10, "Clémentine Autain": 9, "Marine Tondelier": 8}}, {"id": "q3_b", "text": "Baisse d'urgence de la TVA sur les carburants, l'énergie et l'alimentation de 20% à 5,5% ou 0%", "weights": {"Marine Le Pen": 10, "Jordan Bardella": 10, "Nicolas Dupont-Aignan": 10, "Florian Philippot": 10, "Fabien Roussel": 8, "Jean Lassalle": 9, "Hélène Thouy": 7}}, {"id": "q3_c", "text": "Stabilité fiscale globale avec allègement ciblé d'impôt sur le revenu pour les classes moyennes", "weights": {"Gabriel Attal": 10, "François Bayrou": 10, "Édouard Philippe": 9, "Michel Barnier": 9, "Yaël Braun-Pivet": 9, "Gérald Darmanin": 9, "Bernard Cazeneuve": 8, "François Hollande": 8}}, {"id": "q3_d", "text": "Suppression totale de l'IFI et des droits de succession en ligne directe jusqu'à 300k€ à 1M€", "weights": {"David Lisnard": 10, "Bruno Retailleau": 10, "Laurent Wauquiez": 10, "Marion Maréchal": 10, "Éric Zemmour": 10, "Xavier Bertrand": 8}}]}, {"id": "q4", "category": "Fiscalité des Entreprises & Économie", "question": "Comment concevez-vous la fiscalité et les aides aux entreprises ?", "options": [{"id": "q4_a", "text": "Taxer les superprofits, interdire les dividendes excessifs et conditionner strictement les 160 Mds € d'aides publiques", "weights": {"Jean-Luc Mélenchon": 10, "François Ruffin": 10, "Marine Tondelier": 10, "Clémentine Autain": 10, "Fabien Roussel": 10, "Philippe Poutou": 10, "Carole Delga": 9, "Bernard Cazeneuve": 8, "Dominique de Villepin": 8}}, {"id": "q4_b", "text": "Priorité nationale aux entreprises françaises pour la commande publique et protectionnisme ciblé", "weights": {"Jordan Bardella": 10, "Marine Le Pen": 10, "Nicolas Dupont-Aignan": 10, "Florian Philippot": 10, "François Asselineau": 9, "Jean Lassalle": 8, "Éric Zemmour": 8}}, {"id": "q4_c", "text": "Pacte de stabilité fiscale, simplification des normes et soutien aux startups et filières d'avenir", "weights": {"Gabriel Attal": 10, "Édouard Philippe": 10, "Michel Barnier": 9, "François Bayrou": 9, "Yaël Braun-Pivet": 9, "Raphaël Glucksmann": 8, "François Hollande": 8}}, {"id": "q4_d", "text": "Choc de compétitivité : suppression intégrale des impôts de production (C3S, CVAE) et baisse de l'IS à 20%", "weights": {"David Lisnard": 10, "Bruno Retailleau": 10, "Laurent Wauquiez": 10, "Marion Maréchal": 10, "Éric Zemmour": 9, "Xavier Bertrand": 9}}]}, {"id": "q5", "category": "Énergie & Transition Écologique", "question": "Quelle stratégie énergétique la France doit-elle adopter ?", "options": [{"id": "q5_a", "text": "Sortie programmée du nucléaire civil, 100% renouvelable d'ici 2050 et plan rail massif de 100 Mds €", "weights": {"Marine Tondelier": 10, "Jean-Luc Mélenchon": 10, "Clémentine Autain": 10, "Philippe Poutou": 10, "Nathalie Arthaud": 9, "Hélène Thouy": 9}}, {"id": "q5_b", "text": "Mix équilibré : maintien et prolongation du parc nucléaire existant + essor solaire et hydraulique", "weights": {"Bernard Cazeneuve": 10, "François Hollande": 10, "Raphaël Glucksmann": 10, "Carole Delga": 10, "François Bayrou": 9, "Jean-Marc Governatori": 9, "Yaël Braun-Pivet": 9}}, {"id": "q5_c", "text": "Relance nucléaire massive avec 14 nouveaux réacteurs EPR 2 et arrêt du moratoire éolien", "weights": {"Gabriel Attal": 10, "Édouard Philippe": 10, "Michel Barnier": 10, "Dominique de Villepin": 9, "Fabien Roussel": 9, "Gérald Darmanin": 9}}, {"id": "q5_d", "text": "100% Souverainisme nucléaire (14+ EPR), démantèlement des éoliennes terrestres et sortie du marché européen de l'électricité", "weights": {"David Lisnard": 9, "Laurent Wauquiez": 10, "Bruno Retailleau": 10, "Marine Le Pen": 10, "Jordan Bardella": 10, "Éric Zemmour": 10, "Marion Maréchal": 10, "Nicolas Dupont-Aignan": 10, "Florian Philippot": 10}}]}, {"id": "q6", "category": "Dépenses Publiques & Dette", "question": "Quel est votre objectif prioritaire pour les finances publiques de la France ?", "options": [{"id": "q6_a", "text": "Assumer le déficit public (+100 Mds €) pour relancer l'économie par les services publics, la santé et l'école", "weights": {"Philippe Poutou": 10, "Nathalie Arthaud": 10, "Jean-Luc Mélenchon": 10, "François Ruffin": 9, "Fabien Roussel": 9, "Clémentine Autain": 9}}, {"id": "q6_b", "text": "Investissements écologiques et sociaux ciblés tout en stabilisant le déficit sous les 3,2% du PIB", "weights": {"Marine Tondelier": 9, "Carole Delga": 9, "Raphaël Glucksmann": 9, "François Hollande": 9, "Jean-Marc Governatori": 8, "Hélène Thouy": 8}}, {"id": "q6_c", "text": "Maîtrise progressive et ordonnée pour ramener le déficit sous les 3% avec règle d'or européenne", "weights": {"François Bayrou": 10, "Michel Barnier": 10, "Édouard Philippe": 10, "Gabriel Attal": 9, "Yaël Braun-Pivet": 9, "Bernard Cazeneuve": 9}}, {"id": "q6_d", "text": "Cure d'amaigrissement drastique de l'État : baisser les dépenses de 100 à 120 Mds € pour désendetter massivement le pays", "weights": {"David Lisnard": 10, "Bruno Retailleau": 10, "Laurent Wauquiez": 10, "Marion Maréchal": 10, "Éric Zemmour": 9, "Florian Philippot": 8}}]}, {"id": "q7", "category": "Fonction Publique & Nombre de Fonctionnaires", "question": "Quelle politique pour le nombre de fonctionnaires en France ?", "options": [{"id": "q7_a", "text": "Créer au moins 100 000 à 300 000 postes d'agents publics (hôpital, école, justice, transition écologique)", "weights": {"Jean-Luc Mélenchon": 10, "Fabien Roussel": 10, "Philippe Poutou": 10, "Nathalie Arthaud": 10, "François Ruffin": 9, "Clémentine Autain": 9, "Marine Tondelier": 8}}, {"id": "q7_b", "text": "Maintien global des effectifs avec redéploiement des tâches administratives vers le terrain", "weights": {"Bernard Cazeneuve": 9, "François Hollande": 9, "Carole Delga": 9, "Raphaël Glucksmann": 9, "Jean-Marc Governatori": 8, "Dominique de Villepin": 8}}, {"id": "q7_c", "text": "Non-remplacement de 50 000 à 150 000 fonctionnaires administratifs via la digitalisation de l'État", "weights": {"Gabriel Attal": 9, "François Bayrou": 9, "Édouard Philippe": 10, "Michel Barnier": 9, "Xavier Bertrand": 9, "Marine Le Pen": 8, "Jordan Bardella": 8}}, {"id": "q7_d", "text": "Choc anti-bureaucratique : non-remplacement de 300 000 à 500 000 fonctionnaires d'agences et ministères", "weights": {"David Lisnard": 10, "Bruno Retailleau": 10, "Laurent Wauquiez": 10, "Marion Maréchal": 10, "Éric Zemmour": 9}}]}, {"id": "q8", "category": "Immigration & Frontières", "question": "Quelle doctrine migratoire souhaitez-vous voir appliquée ?", "options": [{"id": "q8_a", "text": "Liberté de circulation, régularisation de tous les sans-papiers travailleurs et fermeture des centres de rétention", "weights": {"Philippe Poutou": 10, "Nathalie Arthaud": 10, "Jean-Luc Mélenchon": 10, "Clémentine Autain": 9, "Marine Tondelier": 8, "François Ruffin": 8}}, {"id": "q8_b", "text": "Accueil républicain digne, régularisation ciblée dans les métiers en tension et fermeté sur les OQTF", "weights": {"Bernard Cazeneuve": 9, "François Hollande": 9, "Carole Delga": 9, "Raphaël Glucksmann": 9, "Jean-Marc Governatori": 8, "Hélène Thouy": 8}}, {"id": "q8_c", "text": "Quotas migratoires annuels votés au Parlement, renforcement de Frontex et exécution stricte des expulsions", "weights": {"Gabriel Attal": 9, "Édouard Philippe": 9, "Michel Barnier": 9, "François Bayrou": 9, "Gérald Darmanin": 9, "Yaël Braun-Pivet": 9, "Dominique de Villepin": 8}}, {"id": "q8_d", "text": "Immigration zéro, priorité nationale pour l'accès aux logements/aides, suppression de l'AME et carence de 5 ans", "weights": {"Marine Le Pen": 10, "Jordan Bardella": 10, "Éric Zemmour": 10, "Marion Maréchal": 10, "Bruno Retailleau": 10, "Laurent Wauquiez": 9, "David Lisnard": 9, "Nicolas Dupont-Aignan": 10, "Florian Philippot": 10}}]}, {"id": "q9", "category": "Sécurité & Justice", "question": "Quelle priorité pour la sécurité des citoyens et la réponse pénale ?", "options": [{"id": "q9_a", "text": "Désarmement et dissolution des unités de maintien de l'ordre controversées (BRAV-M), police de proximité apaisée", "weights": {"Jean-Luc Mélenchon": 10, "Philippe Poutou": 10, "Nathalie Arthaud": 10, "Clémentine Autain": 10, "Marine Tondelier": 8, "François Ruffin": 8}}, {"id": "q9_b", "text": "Police de proximité renforcée, revalorisation des moyens numériques de la justice et tribunaux de canton", "weights": {"Bernard Cazeneuve": 10, "François Hollande": 9, "Carole Delga": 9, "Raphaël Glucksmann": 9, "François Bayrou": 9, "Jean-Marc Governatori": 8}}, {"id": "q9_c", "text": "Poursuite de la loi de programmation justice, internats éducatifs fermés et pouvoirs accrus aux polices municipales", "weights": {"Gabriel Attal": 10, "Gérald Darmanin": 9, "Édouard Philippe": 9, "Michel Barnier": 9, "Yaël Braun-Pivet": 9, "Dominique de Villepin": 8}}, {"id": "q9_d", "text": "Tolérance zéro : 15 000 à 20 000 places de prison, peines planchers incompressibles et fin de l'excuse de minorité dès 16 ans", "weights": {"David Lisnard": 10, "Bruno Retailleau": 10, "Laurent Wauquiez": 10, "Marine Le Pen": 10, "Jordan Bardella": 10, "Éric Zemmour": 10, "Marion Maréchal": 10, "Xavier Bertrand": 10, "Nicolas Dupont-Aignan": 9}}]}, {"id": "q10", "category": "Souverainisme & Europe", "question": "Quelle position la France doit-elle adopter vis-à-vis de l'Union Européenne et de l'OTAN ?", "options": [{"id": "q10_a", "text": "Frexit immédiat (sortie de l'UE par l'article 50), rétablissement du Franc et sortie unilatérale de l'OTAN", "weights": {"Florian Philippot": 10, "François Asselineau": 10, "Nathalie Arthaud": 8, "Philippe Poutou": 8}}, {"id": "q10_b", "text": "Souveraineté nationale prévalant sur le droit européen, référendum populaire et sortie du commandement intégré de l'OTAN", "weights": {"Marine Le Pen": 10, "Jordan Bardella": 10, "Éric Zemmour": 10, "Marion Maréchal": 9, "Nicolas Dupont-Aignan": 10, "Dominique de Villepin": 9, "Jean-Luc Mélenchon": 8, "Fabien Roussel": 8}}, {"id": "q10_c", "text": "Subsidiarité exigeante : respect des frontières nationales, arrêt des normes bruxelloises inutiles mais maintien dans l'Euro", "weights": {"David Lisnard": 10, "Bruno Retailleau": 10, "Laurent Wauquiez": 10, "Michel Barnier": 9, "Xavier Bertrand": 9, "Jean Lassalle": 8}}, {"id": "q10_d", "text": "Soutien total à l'intégration européenne, défense européenne commune et respect scrupuleux des traités de l'UE", "weights": {"Raphaël Glucksmann": 10, "François Bayrou": 10, "Gabriel Attal": 10, "Édouard Philippe": 10, "François Hollande": 9, "Yaël Braun-Pivet": 9, "Bernard Cazeneuve": 9, "Carole Delga": 9}}]}, {"id": "q11", "category": "Institutions & Démocratie", "question": "Comment moderniser la démocratie et les institutions françaises ?", "options": [{"id": "q11_a", "text": "Passer à la VIe République via une Assemblée constituante, instaurer le RIC constituant et supprimer le 49.3", "weights": {"Jean-Luc Mélenchon": 10, "Clémentine Autain": 10, "François Ruffin": 10, "Marine Tondelier": 9, "Philippe Poutou": 9, "Florian Philippot": 8}}, {"id": "q11_b", "text": "Démocratie directe et populaire : référendum d'initiative citoyenne (RIC) régulier et proportionnelle intégrale", "weights": {"Marine Le Pen": 9, "Jordan Bardella": 9, "Nicolas Dupont-Aignan": 10, "François Asselineau": 9, "Jean Lassalle": 10, "Fabien Roussel": 8}}, {"id": "q11_c", "text": "Retour au mandat présidentiel de 7 ans (septennat républicain non renouvelable) et apaisement parlementaire", "weights": {"Dominique de Villepin": 10, "Bernard Cazeneuve": 9, "François Hollande": 8, "François Bayrou": 8, "Carole Delga": 8}}, {"id": "q11_d", "text": "Conserver la force de la Ve République présidentielle avec autonomie renforcée des maires et règle d'or budgétaire", "weights": {"David Lisnard": 10, "Bruno Retailleau": 10, "Laurent Wauquiez": 10, "Édouard Philippe": 9, "Gabriel Attal": 9, "Michel Barnier": 9, "Yaël Braun-Pivet": 9, "Marion Maréchal": 9, "Éric Zemmour": 9}}]}, {"id": "q12", "category": "Agriculture & Condition Animale", "question": "Quelle politique agricole et environnementale souhaitez-vous ?", "options": [{"id": "q12_a", "text": "Interdiction de l'élevage intensif, fin de la chasse à courre et de la corrida, et ministère plein du bien-être animal", "weights": {"Hélène Thouy": 10, "Marine Tondelier": 9, "Clémentine Autain": 8, "Philippe Poutou": 8, "Jean-Marc Governatori": 8}}, {"id": "q12_b", "text": "Revalorisation des petites exploitations paysannes, des retraites agricoles et soutien au bio local", "weights": {"Carole Delga": 10, "François Ruffin": 9, "Fabien Roussel": 9, "Jean-Luc Mélenchon": 8, "Raphaël Glucksmann": 8, "François Hollande": 8}}, {"id": "q12_c", "text": "Défense de la ruralité authentique, sanctuarisation de la chasse traditionnelle et soutien aux éleveurs", "weights": {"Jean Lassalle": 10, "Laurent Wauquiez": 9, "Bruno Retailleau": 9, "Xavier Bertrand": 9, "Nicolas Dupont-Aignan": 8, "Marine Le Pen": 8}}, {"id": "q12_d", "text": "Libération normative : arrêt de la surtransposition des normes européennes phytosanitaires et compétitivité agricole", "weights": {"David Lisnard": 10, "Bruno Retailleau": 10, "Laurent Wauquiez": 10, "Marion Maréchal": 10, "Éric Zemmour": 9, "Michel Barnier": 9, "Gabriel Attal": 8, "Édouard Philippe": 8}}]}];
+        const candMeta = {"David Lisnard": {"parti": "Nouvelle Énergie", "orientation": "Droite libérale & souveraine", "color": "#0ea5e9", "url": "../candidats/David%20Lisnard/Visualisation_Programme_et_Comparatif_Budget_David_Lisnard.html"}, "Bruno Retailleau": {"parti": "Les Républicains", "orientation": "Droite républicaine & conservatrice", "color": "#0284c7", "url": "../candidats/Bruno%20Retailleau/Visualisation_Programme_et_Comparatif_Budget_Bruno_Retailleau.html"}, "Laurent Wauquiez": {"parti": "La Droite Républicaine", "orientation": "Droite républicaine & régalienne", "color": "#2563eb", "url": "../candidats/Laurent%20Wauquiez/Visualisation_Programme_et_Comparatif_Budget_Laurent_Wauquiez.html"}, "Édouard Philippe": {"parti": "Horizons", "orientation": "Centre-droit", "color": "#3b82f6", "url": "../candidats/Édouard%20Philippe/Visualisation_Programme_et_Comparatif_Budget_Édouard_Philippe.html"}, "Gabriel Attal": {"parti": "Renaissance", "orientation": "Centre progressiste & libéral", "color": "#6366f1", "url": "../candidats/Gabriel%20Attal/Visualisation_Programme_et_Comparatif_Budget_Gabriel_Attal.html"}, "François Bayrou": {"parti": "MoDem", "orientation": "Centre humaniste & démocrate", "color": "#f97316", "url": "../candidats/François%20Bayrou/Visualisation_Programme_et_Comparatif_Budget_François_Bayrou.html"}, "Michel Barnier": {"parti": "Les Républicains", "orientation": "Droite modérée & européenne", "color": "#0369a1", "url": "../candidats/Michel%20Barnier/Visualisation_Programme_et_Comparatif_Budget_Michel_Barnier.html"}, "Xavier Bertrand": {"parti": "Nous France / LR", "orientation": "Droite populaire & sociale", "color": "#0284c7", "url": "../candidats/Xavier%20Bertrand/Visualisation_Programme_et_Comparatif_Budget_Xavier_Bertrand.html"}, "Gérald Darmanin": {"parti": "Populaire / Renaissance", "orientation": "Centre-droit populaire", "color": "#3b82f6", "url": "../candidats/Gérald%20Darmanin/Visualisation_Programme_et_Comparatif_Budget_Gérald%20Darmanin.html"}, "Yaël Braun-Pivet": {"parti": "Renaissance", "orientation": "Centre institutionnel", "color": "#8b5cf6", "url": "../candidats/Yaël%20Braun-Pivet/Visualisation_Programme_et_Comparatif_Budget_Yaël_Braun-Pivet.html"}, "Marine Le Pen": {"parti": "Rassemblement National", "orientation": "Droite nationale & souverainiste", "color": "#1e3a8a", "url": "../candidats/Marine%20Le%20Pen/Visualisation_Programme_et_Comparatif_Budget_Marine_Le_Pen.html"}, "Jordan Bardella": {"parti": "Rassemblement National", "orientation": "Droite nationale & patriotique", "color": "#1e3a8a", "url": "../candidats/Jordan%20Bardella/Visualisation_Programme_et_Comparatif_Budget_Jordan_Bardella.html"}, "Éric Zemmour": {"parti": "Reconquête !", "orientation": "Droite identitaire & civilisationnelle", "color": "#1e293b", "url": "../candidats/Éric%20Zemmour/Visualisation_Programme_et_Comparatif_Budget_Éric_Zemmour.html"}, "Marion Maréchal": {"parti": "Identité-Libertés", "orientation": "Droite conservatrice libérale", "color": "#334155", "url": "../candidats/Marion%20Maréchal/Visualisation_Programme_et_Comparatif_Budget_Marion_Maréchal.html"}, "Nicolas Dupont-Aignan": {"parti": "Debout la France", "orientation": "Gaullisme souverainiste", "color": "#1e3a8a", "url": "../candidats/Nicolas%20Dupont-Aignan/Visualisation_Programme_et_Comparatif_Budget_Nicolas_Dupont-Aignan.html"}, "Dominique de Villepin": {"parti": "La France Humaniste", "orientation": "Gaullisme diplomatique & social", "color": "#1d4ed8", "url": "../candidats/Dominique%20de%20Villepin/Visualisation_Programme_et_Comparatif_Budget_Dominique_de_Villepin.html"}, "Florian Philippot": {"parti": "Les Patriotes", "orientation": "Souverainisme & Frexit", "color": "#1e40af", "url": "../candidats/Florian%20Philippot/Visualisation_Programme_et_Comparatif_Budget_Florian_Philippot.html"}, "François Asselineau": {"parti": "UPR", "orientation": "Souverainisme juridique", "color": "#1d4ed8", "url": "../candidats/François%20Asselineau/Visualisation_Programme_et_Comparatif_Budget_François_Asselineau.html"}, "Jean Lassalle": {"parti": "Résistons !", "orientation": "Ruralisme souverain", "color": "#84cc16", "url": "../candidats/Jean%20Lassalle/Visualisation_Programme_et_Comparatif_Budget_Jean_Lassalle.html"}, "Bernard Cazeneuve": {"parti": "La Convention", "orientation": "Gauche républicaine & laïque", "color": "#1e3a8a", "url": "../candidats/Bernard%20Cazeneuve/Visualisation_Programme_et_Comparatif_Budget_Bernard_Cazeneuve.html"}, "François Hollande": {"parti": "Parti Socialiste", "orientation": "Social-démocratie gouvernementale", "color": "#e11d48", "url": "../candidats/François%20Hollande/Visualisation_Programme_et_Comparatif_Budget_François_Hollande.html"}, "Carole Delga": {"parti": "PS / Régions de France", "orientation": "Gauche territoriale & girondine", "color": "#f43f5e", "url": "../candidats/Carole%20Delga/Visualisation_Programme_et_Comparatif_Budget_Carole_Delga.html"}, "Raphaël Glucksmann": {"parti": "Place Publique", "orientation": "Centre-gauche européen", "color": "#0284c7", "url": "../candidats/Raphaël%20Glucksmann/Visualisation_Programme_et_Comparatif_Budget_Raphaël_Glucksmann.html"}, "Marine Tondelier": {"parti": "Les Écologistes (EELV)", "orientation": "Écologie politique", "color": "#16a34a", "url": "../candidats/Marine%20Tondelier/Visualisation_Programme_et_Comparatif_Budget_Marine_Tondelier.html"}, "Jean-Marc Governatori": {"parti": "Écologie au Centre", "orientation": "Écologie centriste & indépendante", "color": "#10b981", "url": "../candidats/Jean-Marc%20Governatori/Visualisation_Programme_et_Comparatif_Budget_Jean-Marc_Governatori.html"}, "Hélène Thouy": {"parti": "Parti Animaliste", "orientation": "Condition animale & écologie", "color": "#14b8a6", "url": "../candidats/Hélène%20Thouy/Visualisation_Programme_et_Comparatif_Budget_Hélène_Thouy.html"}, "François Ruffin": {"parti": "Picardie Debout !", "orientation": "Gauche populaire & ouvrière", "color": "#ef4444", "url": "../candidats/François%20Ruffin/Visualisation_Programme_et_Comparatif_Budget_François_Ruffin.html"}, "Clémentine Autain": {"parti": "L'Après", "orientation": "Gauche unitaire & féministe", "color": "#a855f7", "url": "../candidats/Clémentine%20Autain/Visualisation_Programme_et_Comparatif_Budget_Clémentine_Autain.html"}, "Fabien Roussel": {"parti": "Parti Communiste Français", "orientation": "Gauche républicaine & ouvrière", "color": "#dc2626", "url": "../candidats/Fabien%20Roussel/Visualisation_Programme_et_Comparatif_Budget_Fabien_Roussel.html"}, "Jean-Luc Mélenchon": {"parti": "La France Insoumise", "orientation": "Gauche radicale & populaire", "color": "#b91c1c", "url": "../candidats/Jean-Luc%20Mélenchon/Visualisation_Programme_et_Comparatif_Budget_Jean-Luc_Mélenchon.html"}, "Nathalie Arthaud": {"parti": "Lutte Ouvrière", "orientation": "Extrême gauche communiste", "color": "#991b1b", "url": "../candidats/Nathalie%20Arthaud/Visualisation_Programme_et_Comparatif_Budget_Nathalie_Arthaud.html"}, "Philippe Poutou": {"parti": "Nouveau Parti Anticapitaliste", "orientation": "Extrême gauche anticapitaliste", "color": "#b91c1c", "url": "../candidats/Philippe%20Poutou/Visualisation_Programme_et_Comparatif_Budget_Philippe_Poutou.html"}};
+        const allCands = ["David Lisnard", "Bruno Retailleau", "Laurent Wauquiez", "Édouard Philippe", "Gabriel Attal", "François Bayrou", "Michel Barnier", "Xavier Bertrand", "Gérald Darmanin", "Yaël Braun-Pivet", "Marine Le Pen", "Jordan Bardella", "Éric Zemmour", "Marion Maréchal", "Nicolas Dupont-Aignan", "Dominique de Villepin", "Florian Philippot", "François Asselineau", "Jean Lassalle", "Bernard Cazeneuve", "François Hollande", "Carole Delga", "Raphaël Glucksmann", "Marine Tondelier", "Jean-Marc Governatori", "Hélène Thouy", "François Ruffin", "Clémentine Autain", "Fabien Roussel", "Jean-Luc Mélenchon", "Nathalie Arthaud", "Philippe Poutou"];
+
+        let currentQIndex = 0;
+        const userAnswers = new Array(questions.length).fill(null);
+        let affinityChart = null;
+
+        function renderQuestion() {
+            const q = questions[currentQIndex];
+            const card = document.getElementById('questionCard');
+            const letters = ['A', 'B', 'C', 'D', 'E'];
+
+            let html = `
+                <div class="q-category">${q.category}</div>
+                <div class="q-title">${q.question}</div>
+                <div class="options-list">
+            `;
+
+            q.options.forEach((opt, idx) => {
+                const isSelected = userAnswers[currentQIndex] === opt.id;
+                html += `
+                    <div class="option-btn ${isSelected ? 'selected' : ''}" onclick="selectOption('${opt.id}')">
+                        <div class="opt-letter">${letters[idx]}</div>
+                        <div style="flex:1;">${opt.text}</div>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+            card.innerHTML = html;
+
+            // Update progress
+            const progress = ((currentQIndex + 1) / questions.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('progressText').innerText = `Question ${currentQIndex + 1} sur ${questions.length}`;
+
+            // Buttons state
+            document.getElementById('btnPrev').disabled = currentQIndex === 0;
+            document.getElementById('btnNext').disabled = userAnswers[currentQIndex] === null;
+            document.getElementById('btnNext').innerText = (currentQIndex === questions.length - 1) ? "Voir mes résultats 🎉" : "Suivant →";
+        }
+
+        function selectOption(optId) {
+            userAnswers[currentQIndex] = optId;
+            renderQuestion();
+            document.getElementById('btnNext').disabled = false;
+        }
+
+        function skipQuestion() {
+            userAnswers[currentQIndex] = 'SKIP';
+            nextQuestion();
+        }
+
+        function nextQuestion() {
+            if (currentQIndex < questions.length - 1) {
+                currentQIndex++;
+                renderQuestion();
+            } else {
+                calculateResults();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQIndex > 0) {
+                currentQIndex--;
+                renderQuestion();
+            }
+        }
+
+        function calculateResults() {
+            document.getElementById('quizSection').style.display = 'none';
+            document.getElementById('resultsSection').style.display = 'block';
+
+            // Scoring system
+            const candScores = {};
+            const candMaxScores = {};
+            allCands.forEach(c => {
+                candScores[c] = 0;
+                candMaxScores[c] = 0;
+            });
+
+            questions.forEach((q, qIdx) => {
+                const chosenOptId = userAnswers[qIdx];
+                if (chosenOptId && chosenOptId !== 'SKIP') {
+                    const chosenOpt = q.options.find(o => o.id === chosenOptId);
+                    if (chosenOpt) {
+                        allCands.forEach(c => {
+                            const weight = chosenOpt.weights[c] || 0;
+                            candScores[c] += weight;
+                            candMaxScores[c] += 10;
+                        });
+                    }
+                }
+            });
+
+            // Convert to percentages
+            const results = allCands.map(c => {
+                const max = candMaxScores[c] || 1;
+                const score = candScores[c];
+                let pct = Math.round((score / max) * 100);
+                if (pct < 10) pct = 10 + Math.floor(Math.random() * 5); // baseline minimum
+                return {
+                    name: c,
+                    pct: pct,
+                    meta: candMeta[c] || {}
+                };
+            });
+
+            // Sort descending
+            results.sort((a, b) => b.pct - a.pct);
+
+            // Render Podium
+            const podiumCont = document.getElementById('podiumContainer');
+            podiumCont.innerHTML = "";
+
+            const medals = ['🥇', '🥈', '🥉'];
+            const classes = ['first', 'second', 'third'];
+            const labels = ['1ère Place — Accord Majeur', '2ème Place — Forte Convergence', '3ème Place — Convergence Élevée'];
+
+            for (let i = 0; i < 3; i++) {
+                const r = results[i];
+                const card = document.createElement('div');
+                card.className = `podium-card ${classes[i]}`;
+                card.innerHTML = `
+                    <div class="medal-badge">${medals[i]}</div>
+                    <div class="score-lbl">${labels[i]}</div>
+                    <div class="score-circle">${r.pct}%</div>
+                    <div class="cand-name">${r.name}</div>
+                    <div class="cand-party">${r.meta.parti} • ${r.meta.orientation}</div>
+                    <a href="${r.meta.url}" class="btn-see-dossier" target="_blank">Consulter le Programme Complet de ${r.name} →</a>
+                `;
+                podiumCont.appendChild(card);
+            }
+
+            // Render Horizontal Bar Chart
+            const ctx = document.getElementById('affinityChart').getContext('2d');
+            if (affinityChart) affinityChart.destroy();
+
+            affinityChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: results.map(r => r.name),
+                    datasets: [{
+                        label: 'Taux d\'Affinité Politique & Budgétaire (%)',
+                        data: results.map(r => r.pct),
+                        backgroundColor: results.map((r, i) => i === 0 ? '#eab308' : i < 3 ? '#3b82f6' : r.pct >= 50 ? '#10b981' : '#64748b'),
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            min: 0,
+                            max: 100,
+                            ticks: { color: '#94a3b8', callback: v => v + '%' },
+                            grid: { color: 'rgba(255,255,255,0.06)' }
+                        },
+                        y: {
+                            ticks: { color: '#cbd5e1', font: { size: 11 } },
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#fff' } },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => `Affinité : ${ctx.raw}% avec ${ctx.label}`
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function restartQuiz() {
+            currentQIndex = 0;
+            userAnswers.fill(null);
+            document.getElementById('resultsSection').style.display = 'none';
+            document.getElementById('quizSection').style.display = 'block';
+            renderQuestion();
+        }
+
+        // Initialize quiz
+        renderQuestion();
+    </script>
+</body>
+</html>

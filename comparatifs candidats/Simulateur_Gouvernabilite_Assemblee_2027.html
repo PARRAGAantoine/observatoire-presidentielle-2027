@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulateur de Majorité Parlementaire 2027 : Hémicycle & Gouvernabilité</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-body: #0a0e17;
+            --bg-card: #131b2e;
+            --bg-card-hover: #1b2640;
+            --border-color: #233152;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-rose: #f43f5e;
+            --accent-amber: #f59e0b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            padding: 24px;
+            line-height: 1.5;
+        }
+        .header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #831843 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+        .header h1 { font-size: 28px; font-weight: 800; color: #fff; margin-bottom: 8px; }
+        .header p { font-size: 14px; color: #cbd5e1; max-width: 900px; margin: 0 auto; }
+        
+        .controls-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .sel-scenar {
+            background: #1e293b; color: #fff; border: 1px solid var(--border-color);
+            padding: 10px 16px; border-radius: 8px; font-size: 14px; font-weight: 700;
+            min-width: 280px;
+        }
+        
+        .layout-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 1024px) {
+            .layout-grid { grid-template-columns: 1fr; }
+        }
+        
+        .hemicycle-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 24px;
+            text-align: center;
+        }
+        .hemicycle-box h2 {
+            font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 12px;
+            border-left: 4px solid var(--accent-blue); padding-left: 10px; text-align: left;
+        }
+        .chart-holder { position: relative; height: 350px; width: 100%; }
+        
+        .seuil-badge {
+            display: inline-block; background: rgba(59, 130, 246, 0.15); border: 1px solid #3b82f6;
+            color: #60a5fa; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 800;
+            margin-top: 10px;
+        }
+        
+        /* Analysis Card */
+        .analysis-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .analysis-card h2 {
+            font-size: 18px; font-weight: 800; color: #fff;
+            border-left: 4px solid var(--accent-green); padding-left: 10px;
+        }
+        
+        .kpi-row {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+        }
+        .kpi-item {
+            background: #1a233a; padding: 12px; border-radius: 8px; text-align: center;
+        }
+        .kpi-lbl { font-size: 10px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; }
+        .kpi-val { font-size: 20px; font-weight: 900; margin-top: 2px; color: #fff; }
+        
+        .detail-item {
+            background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border-left: 3px solid var(--accent-blue);
+            font-size: 13px; line-height: 1.5;
+        }
+        .detail-item strong { color: #e2e8f0; display: block; font-size: 11px; text-transform: uppercase; margin-bottom: 2px; }
+        
+        .footer { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 36px; padding: 20px 0; border-top: 1px solid var(--border-color); }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>🏛️ Simulateur de Majorité Parlementaire 2027 : Hémicycle & Gouvernabilité</h1>
+        <p>Sélectionnez un président élu pour visualiser la composition projetée des <strong>577 députés de l'Assemblée nationale</strong>, la faisabilité du vote de son budget de l'An 1 et le risque de motion de censure.</p>
+    </div>
+
+    <div class="controls-box">
+        <label style="font-weight: 800; color: #cbd5e1;">Vainqueur de l'Élection Présidentielle :</label>
+        <select id="scenarSelect" class="sel-scenar" onchange="updateHemicycle()">
+            <!-- Populated via JS -->
+        </select>
+        <span style="font-size: 12px; color: var(--text-muted);">Seuil de majorité absolue : <strong>289 députés</strong></span>
+    </div>
+
+    <div class="layout-grid">
+        <!-- Hémicycle Chart -->
+        <div class="hemicycle-box">
+            <h2>Hémicycle Projeté de l'Assemblée Nationale (577 Sièges)</h2>
+            <div class="chart-holder">
+                <canvas id="hemiChart"></canvas>
+            </div>
+            <div class="seuil-badge" id="seuilBadge">Majorité Requise : 289 Sièges</div>
+        </div>
+
+        <!-- Diagnostic de Gouvernabilité -->
+        <div class="analysis-card">
+            <h2>Diagnostic Institutionnel & Faisabilité Budgétaire</h2>
+
+            <div class="kpi-row">
+                <div class="kpi-item">
+                    <div class="kpi-lbl">Sièges de la Coalition</div>
+                    <div class="kpi-val" id="kpiSeats" style="color: var(--accent-green);">295 / 577</div>
+                </div>
+                <div class="kpi-item">
+                    <div class="kpi-lbl">Risque de Censure</div>
+                    <div class="kpi-val" id="kpiRisk" style="color: var(--accent-blue);">Faible</div>
+                </div>
+            </div>
+
+            <div class="detail-item" id="itemCoalition">
+                <strong>Coalition de Gouvernement :</strong>
+                <span id="txtCoalition">...</span>
+            </div>
+
+            <div class="detail-item" id="itemSenat">
+                <strong>Relation avec le Sénat :</strong>
+                <span id="txtSenat">...</span>
+            </div>
+
+            <div class="detail-item" id="itemFeasibility">
+                <strong>Faisabilité du Vote du Budget :</strong>
+                <span id="txtFeasibility">...</span>
+            </div>
+
+            <div class="detail-item" id="itemBlocage" style="border-left-color: var(--accent-rose);">
+                <strong>Point de Vigilance & Risque de Crise :</strong>
+                <span id="txtBlocage">...</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        Grand Observatoire Présidentiel 2027 — Module Parlementaire & Analyse de Risque Institutionnel
+    </div>
+
+    <script>
+        const scenarios = [{"winner": "David Lisnard", "president_family": "Droite libérale & républicaine", "coalition_name": "Coalition de Rétablissement des Comptes (LR + Horizons + Renaissance + UDI)", "seats": {"gauche_rad": 65, "gauche_mod": 75, "centre_macron": 105, "droite_lr_ne": 150, "rn_ciotti": 160, "autres": 22}, "presidential_majority": 295, "majority_type": "Majorité Absolue de Coalition (295 / 289)", "stability_score": 82, "censure_risk": "Faible", "senat_support": "Très Favorable (Majorité LR-Centriste au Sénat)", "reform_feasibility": "Élevée : Vote du budget de rigueur (-120 Mds €) garanti par le bloc LR-Centre en échange d'investissements régaliens et de simplification.", "blocage_points": "Tension possible avec l'aile gauche de Renaissance sur le statut de la fonction publique."}, {"winner": "Édouard Philippe", "president_family": "Centre-droit / Bloc central élargi", "coalition_name": "Pacte de Stabilité Républicaine (Horizons + Renaissance + MoDem + LR modéré)", "seats": {"gauche_rad": 70, "gauche_mod": 80, "centre_macron": 175, "droite_lr_ne": 115, "rn_ciotti": 125, "autres": 12}, "presidential_majority": 290, "majority_type": "Majorité Absolue (290 / 289)", "stability_score": 85, "censure_risk": "Faible", "senat_support": "Favorable (Alliance avec Gérard Larcher et centristes)", "reform_feasibility": "Très Élevée : Adoption aisée du programme d'économies modérées (-80 Mds €).", "blocage_points": "Fronde sociale sur la retraite à 67 ans pouvant inciter certains députés à se désolidariser."}, {"winner": "Bruno Retailleau", "president_family": "Droite républicaine & conservatrice", "coalition_name": "Majorité d'Ordre et de Liberté (LR + Horizons + UDR + Droite indépendante)", "seats": {"gauche_rad": 70, "gauche_mod": 65, "centre_macron": 110, "droite_lr_ne": 165, "rn_ciotti": 155, "autres": 12}, "presidential_majority": 285, "majority_type": "Majorité Relative Très Solide (285 / 289)", "stability_score": 75, "censure_risk": "Modéré", "senat_support": "Majorité Absolue Totale (Sénat acquis à 100%)", "reform_feasibility": "Élevée : Majorité d'action texte par texte avec l'appui ponctuel du centre ou du RN sur le régalien.", "blocage_points": "Risque de veto constitutionnel sur le référendum migratoire."}, {"winner": "Gabriel Attal", "president_family": "Centre progressiste", "coalition_name": "Majorité Centrale Renouvelée (Renaissance + MoDem + Horizons + Centre-gauche)", "seats": {"gauche_rad": 75, "gauche_mod": 85, "centre_macron": 165, "droite_lr_ne": 105, "rn_ciotti": 135, "autres": 12}, "presidential_majority": 270, "majority_type": "Majorité Relative (270 / 289)", "stability_score": 68, "censure_risk": "Modéré", "senat_support": "Négociation permanente nécessaire avec le Sénat LR", "reform_feasibility": "Moyenne : Nécessite l'usage récurrent de l'article 49.3 sur les lois de finances.", "blocage_points": "Risque de motion de censure transpartisane LR-NFP en cas de désaccord budgétaire."}, {"winner": "Jordan Bardella / Marine Le Pen", "president_family": "Droite nationale & patriotique", "coalition_name": "Bloc National & Souverainiste (RN + UDR Ciotti + Souverainistes)", "seats": {"gauche_rad": 95, "gauche_mod": 85, "centre_macron": 80, "droite_lr_ne": 65, "rn_ciotti": 245, "autres": 7}, "presidential_majority": 245, "majority_type": "Majorité Relative Fragile (245 / 289 - Manque 44 sièges)", "stability_score": 45, "censure_risk": "TRÈS ÉLEVÉ (Front de censure Gauche + Centre)", "senat_support": "Hostilité Totale (Sénat massivement hostile)", "reform_feasibility": "Difficile : Risque de blocage institutionnel immédiat, recours au référendum (art. 11) controversé.", "blocage_points": "Menace permanente de censure parlementaire dès l'automne budgétaire, risque de nouvelle dissolution sous 12 mois."}, {"winner": "Jean-Luc Mélenchon", "president_family": "Gauche de rupture", "coalition_name": "Front Populaire Unitaire (LFI + PS + Écolos + PCF)", "seats": {"gauche_rad": 135, "gauche_mod": 95, "centre_macron": 85, "droite_lr_ne": 80, "rn_ciotti": 175, "autres": 7}, "presidential_majority": 230, "majority_type": "Majorité Relative Minoritaire (230 / 289 - Manque 59 sièges)", "stability_score": 40, "censure_risk": "CRITIQUE (Coalition de censure Droite + Centre + RN)", "senat_support": "Hostilité Radicale (90% du Sénat opposé)", "reform_feasibility": "Très Complexe : Blocage du budget de relance par les oppositions unies, tentative de passage en force ou Constituante.", "blocage_points": "Crise institutionnelle majeure, grève des investissements, recours à la mobilisation populaire dans la rue."}, {"winner": "Bernard Cazeneuve / Carole Delga", "president_family": "Gauche républicaine & Social-démocratie", "coalition_name": "Fédération Républicaine (PS + Place Publique + Radicaux + MoDem + Centre-gauche)", "seats": {"gauche_rad": 60, "gauche_mod": 140, "centre_macron": 140, "droite_lr_ne": 95, "rn_ciotti": 135, "autres": 7}, "presidential_majority": 280, "majority_type": "Majorité Relative Élargie (280 / 289)", "stability_score": 78, "censure_risk": "Faible à Modéré", "senat_support": "Compromis possible avec les centristes et le PS au Sénat", "reform_feasibility": "Bonne : Vote des lois de finances via compromis social-écologique et concertation syndicale.", "blocage_points": "Opposition vive des franges radicales (LFI et RN)."}];
+        const sel = document.getElementById('scenarSelect');
+        let hemiChart = null;
+
+        scenarios.forEach((s, idx) => {
+            const opt = new Option(s.winner + ' (' + s.president_family + ')', idx);
+            sel.add(opt);
+        });
+
+        function updateHemicycle() {
+            const s = scenarios[sel.value];
+
+            // Update KPIs
+            const isMajority = s.presidential_majority >= 289;
+            document.getElementById('kpiSeats').innerText = `${s.presidential_majority} / 577`;
+            document.getElementById('kpiSeats').style.color = isMajority ? '#10b981' : '#f43f5e';
+            
+            document.getElementById('kpiRisk').innerText = s.censure_risk;
+            document.getElementById('kpiRisk').style.color = s.censure_risk === 'Faible' ? '#10b981' : s.censure_risk === 'Modéré' ? '#f59e0b' : '#f43f5e';
+            
+            document.getElementById('seuilBadge').innerText = s.majority_type;
+            document.getElementById('seuilBadge').style.borderColor = isMajority ? '#10b981' : '#f43f5e';
+            document.getElementById('seuilBadge').style.color = isMajority ? '#10b981' : '#f43f5e';
+
+            document.getElementById('txtCoalition').innerText = s.coalition_name;
+            document.getElementById('txtSenat').innerText = s.senat_support;
+            document.getElementById('txtFeasibility').innerText = s.reform_feasibility;
+            document.getElementById('txtBlocage').innerText = s.blocage_points;
+
+            // Chart Doughnut (Semi-circle like an assembly)
+            const ctx = document.getElementById('hemiChart').getContext('2d');
+            if (hemiChart) hemiChart.destroy();
+
+            const labels = [
+                'Gauche Radicale (LFI/PCF)',
+                'Gauche Sociale-Démocrate (PS/EELV)',
+                'Bloc Central (Renaissance/MoDem/Horizons)',
+                'Droite Républicaine (LR/Nouvelle Énergie)',
+                'Droite Nationale (RN/UDR)',
+                'Non-Inscrits & Divers'
+            ];
+            const dataSeats = [
+                s.seats.gauche_rad,
+                s.seats.gauche_mod,
+                s.seats.centre_macron,
+                s.seats.droite_lr_ne,
+                s.seats.rn_ciotti,
+                s.seats.autres
+            ];
+            const bgColors = ['#b91c1c', '#ec4899', '#f59e0b', '#0284c7', '#1e3a8a', '#64748b'];
+
+            hemiChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: dataSeats,
+                        backgroundColor: bgColors,
+                        borderWidth: 2,
+                        borderColor: '#0a0e17'
+                    }]
+                },
+                options: {
+                    circumference: 180,
+                    rotation: -90,
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#cbd5e1', font: { size: 11 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => `${ctx.label} : ${ctx.raw} députés (${Math.round((ctx.raw/577)*100)}%)`
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Init
+        updateHemicycle();
+    </script>
+</body>
+</html>
